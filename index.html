@@ -174,7 +174,7 @@ function calc(st) {
 // (the page left Google's Apps Script frame on 2026-11-14: that frame's "allow" list has no camera)
 function cam(mode) {
   MODE = mode;
-  WMR_CAM.open(function (code) { go(code); }, function (msg) {
+  WMR_CAM.open(function (code, info) { go(code, info); }, function (msg) {
     if (!msg) { $('fBar').click(); return; }
     var html = '<div class="err">' + esc(msg) + '</div><div class="row"><button class="btn pri" id="bPhoto" style="flex:1">📷 Take a photo of the barcode</button></div>';
     if (MODE === 'quick' && $('qStat')) $('qStat').innerHTML = html; else { show('vScan'); $('hello').style.display = 'none'; $('out').innerHTML = html; }
@@ -183,8 +183,18 @@ function cam(mode) {
 }
 function validCode(d) { return WMR_DECODE.clean(d, '') || (d.length === 8 ? WMR_DECODE.upcEtoA(d) : null); }
 var MODE = 'scan';                 // 'quick' = Quick Scan: one line per item
-function go(code) {
+function go(code, info) {
   var c = validCode(String(code || '').replace(/\D/g, ''));
+  if (c && info && info.short) {         // short UPC-E barcode: easy to misread, so check before spending a search
+    show('vScan'); $('hello').style.display = 'none';
+    $('out').innerHTML = sec('chk', 'CHECK THE NUMBER', '<div style="font-size:30px;font-weight:800;letter-spacing:.08em;text-align:center;margin:6px 0">' + esc(info.printed || c) + '</div>' +
+      '<div class="note" style="text-align:center">Short barcode. Is this the number printed under it?</div>' +
+      '<div class="row"><button class="btn pri" id="bYes" style="flex:1">Yes, look it up</button><button class="btn" id="bNo">No, scan again</button></div>');
+    wireSecs();
+    $('bYes').onclick = function () { go(c); };
+    $('bNo').onclick = function () { cam(MODE); };
+    return;
+  }
   if (!c) { if (MODE === 'quick') quickLine({title: 'Not a valid barcode: ' + code, tag: 'na'}); else $('out').innerHTML = '<div class="err">That is not a valid UPC-A, EAN-13 or UPC-E barcode (check digit). Type it again.</div>'; return; }
   if (MODE === 'quick') { quickScan(c); return; }
   $('q').value = c; scan({upc: c});
@@ -209,13 +219,13 @@ $('fBar').onchange = async function () {
     $('qStat').textContent = 'Reading the barcode…';
     var rq = await WMR_DECODE.decode(f, function (t) { $('qStat').textContent = t; });
     $('qStat').textContent = '';
-    if (rq.code) go(rq.code); else quickLine({title: 'No barcode read from the photo - tap ▥ Scan next, or use Photo search', tag: 'na'});
+    if (rq.code) go(rq.code, rq); else quickLine({title: 'No barcode read from the photo - tap ▥ Scan next, or use Photo search', tag: 'na'});
     return;
   }
   busy('Reading the barcode…');
   try {
     var r = await WMR_DECODE.decode(f, function (t) { busy(t); });
-    if (r.code) { go(r.code); return; }
+    if (r.code) { go(r.code, r); return; }
     $('out').innerHTML = '<div class="err">No barcode could be read from that photo.</div>' +
       '<div class="row"><button class="btn pri" id="bUseLens">Use Photo search instead (1 search)</button><button class="btn" id="bAgain">Take another photo</button><button class="btn" id="bLive">▥ Live camera</button></div>' +
       '<div class="note">Tips: fill the frame with the barcode, hold it flat, avoid glare.</div>';
@@ -491,7 +501,7 @@ function loadHome() {
 var QUICK = lsGet('wmr_quick', []);
 function loadQuick() {
   $('vQuick').innerHTML = '<div class="row"><button class="btn pri" id="qNext" style="flex:1;min-height:56px;font-size:17px">▥ Scan next</button><button class="btn" id="qClear">Clear</button></div>' +
-    '<div class="note" id="qStat"></div>' + sec('quick', 'QUICK SCAN (' + QUICK.length + ')', '<div id="qList"></div>');
+    '<div class="note" id="qStat"></div>' + sec('qlist', 'QUICK SCAN (' + QUICK.length + ')', '<div id="qList"></div>');
   wireSecs(); drawQuick();
   $('qNext').onclick = function () { cam('quick'); };
   $('qClear').onclick = function () { QUICK = []; lsSet('wmr_quick', QUICK); loadQuick(); };
@@ -504,7 +514,7 @@ function drawQuick() {
     : '<div class="note">Tap ▥ Scan next. Each item becomes one line: green BUY under $X or red SKIP. Tap a line for the full card.</div>';
   el.querySelectorAll('.qline').forEach(function (r) { r.onclick = function () { var x = QUICK[+r.dataset.i]; if (x.upc) openItem(x); }; });
 }
-function quickLine(x) { QUICK.unshift(x); QUICK = QUICK.slice(0, 60); lsSet('wmr_quick', QUICK); drawQuick(); var h = document.querySelector('[data-s="quick"] .sh span'); if (h) h.textContent = 'QUICK SCAN (' + QUICK.length + ')'; }
+function quickLine(x) { QUICK.unshift(x); QUICK = QUICK.slice(0, 60); lsSet('wmr_quick', QUICK); drawQuick(); var h = document.querySelector('[data-s="qlist"] .sh span'); if (h) h.textContent = 'QUICK SCAN (' + QUICK.length + ')'; }
 function quickScan(code) {
   var line = {upc: code, title: 'Checking ' + code + '…', tag: ''};
   quickLine(line);

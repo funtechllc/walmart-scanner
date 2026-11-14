@@ -7,7 +7,7 @@
  * Decoder: zxing-wasm 3.1.6 (the zxing-cpp engine compiled to WebAssembly, vendored in vendor/ - no CDN).
  * It is much stronger than the old JavaScript ZXing / Quagga on blur, glare, low light and turned barcodes.
  * Formats: UPC-A, EAN-13, UPC-E (expanded to UPC-A). Only codes with a valid check digit are returned.
- * Safety against false reads: live camera = the same number in 2 frames; photo = UPC-E needs 2 agreeing reads.
+ * Safety against false reads: live camera = the same number in 2 frames (UPC-E: 3); photo = UPC-E needs 3 agreeing reads.
  */
 var WMR_DECODE = (function () {
   var FORMATS = ['UPC-A', 'EAN-13', 'UPC-E'];
@@ -57,7 +57,8 @@ var WMR_DECODE = (function () {
     (rs || []).forEach(function (r) {
       if (r.isValid === false) return;
       var code = clean(r.text, r.format);
-      if (code) out.push({code: code, sure: !/UPC.?E/i.test(String(r.format)), format: r.format});
+      var isE = /UPC.?E/i.test(String(r.format));
+      if (code) out.push({code: code, sure: !isE, format: r.format, printed: isE ? String(r.text).replace(/\D/g, '') : ''});
     });
     return out;
   }
@@ -69,18 +70,37 @@ var WMR_DECODE = (function () {
       img.src = u;
     });
   }
-  /** Draw (part of) an image or video frame into a canvas no bigger than max px; returns ImageData. */
-  function grab(src, W, H, max, band, mode) {
+  /** Draw (part of) an image or video frame into a canvas no bigger than max px, turned deg degrees
+   * (for barcodes held at a slant); returns ImageData. mode: plain / stretch (contrast) / sharp (blur). */
+  function grab(src, W, H, max, band, mode, deg) {
     var sy = band ? H * band[0] : 0, sh = band ? H * (band[1] - band[0]) : H;
     var s = Math.min(1, max / Math.max(W, sh));
     var w = Math.max(1, Math.round(W * s)), h = Math.max(1, Math.round(sh * s));
+    var r = (deg || 0) * Math.PI / 180, cw = w, ch = h;
+    if (r) { cw = Math.round(Math.abs(w * Math.cos(r)) + Math.abs(h * Math.sin(r))); ch = Math.round(Math.abs(w * Math.sin(r)) + Math.abs(h * Math.cos(r))); }
     var c = grab.c || (grab.c = document.createElement('canvas'));
-    c.width = w; c.height = h;
+    c.width = cw; c.height = ch;
     var g = c.getContext('2d', {willReadFrequently: true});
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    if (r) { g.fillStyle = '#fff'; g.fillRect(0, 0, cw, ch); g.translate(cw / 2, ch / 2); g.rotate(r); g.translate(-w / 2, -h / 2); }
     g.drawImage(src, 0, sy, W, sh, 0, 0, w, h);
-    var d = g.getImageData(0, 0, w, h);
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    var d = g.getImageData(0, 0, cw, ch);
     if (mode === 'stretch') stretch(d);
+    if (mode === 'sharp') sharpen(d);
     return d;
+  }
+  /** Unsharp mask on the grey image: helps slightly out-of-focus photos (phone held too close). */
+  function sharpen(d) {
+    var a = d.data, W = d.width, H = d.height, n = W * H, L = new Float32Array(n), B = new Float32Array(n);
+    for (var i = 0, j = 0; i < n; i++, j += 4) L[i] = (a[j] * 299 + a[j + 1] * 587 + a[j + 2] * 114) / 1000;
+    for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {          // 3x3 box blur
+      var sum = 0, cnt = 0;
+      for (var dy = -1; dy <= 1; dy++) { var yy = y + dy; if (yy < 0 || yy >= H) continue;
+        for (var dx = -1; dx <= 1; dx++) { var xx = x + dx; if (xx < 0 || xx >= W) continue; sum += L[yy * W + xx]; cnt++; } }
+      B[y * W + x] = sum / cnt;
+    }
+    for (var k = 0, m = 0; k < n; k++, m += 4) { var v = L[k] + 1.6 * (L[k] - B[k]); a[m] = a[m + 1] = a[m + 2] = v; }
   }
   /** Contrast stretch: helps dim shelves (low light) and washed-out barcodes (glare). */
   function stretch(d) {
@@ -98,22 +118,30 @@ var WMR_DECODE = (function () {
   /** A photo (File/Blob) -> {code, how, tries, ms} or {code: null, tries, ms}. */
   async function decode(blob, onStep, limitMs) {
     var t0 = Date.now(), limit = limitMs || 12000, tries = 0, seen = {};
+    // EAN-13 / UPC-A (long, with guard bars): one read is enough. UPC-E (short) caused a false read in testing
+    // (a slanted EAN-13 photo read as a UPC-E), so it is only taken when 3 different attempts agree.
     var vote = function (r, how) {
       seen[r.code] = (seen[r.code] || 0) + 1;
-      return r.sure || seen[r.code] >= 2 ? {code: r.code, how: how, tries: tries, ms: Date.now() - t0} : null;
+      return r.sure || seen[r.code] >= 3 ? {code: r.code, how: how, tries: tries, ms: Date.now() - t0,
+                                            short: !r.sure, printed: r.printed} : null;
     };
     await prep();
     var img = await loadImg(blob), W = img.naturalWidth, H = img.naturalHeight;
     try {
       // cheapest / most likely first; every step already tries turned, upside-down and inverted barcodes
+      // [max px, band, mode, zxing options, turn degrees]
       var plan = [[2000, null, 'plain', {}], [1200, null, 'plain', {}], [2000, [0.25, 0.75], 'plain', {}],
                   [2000, null, 'stretch', {}], [2000, null, 'plain', {binarizer: 'GlobalHistogram'}],
-                  [2000, null, 'plain', {tryDenoise: true}], [3000, null, 'plain', {}], [800, null, 'plain', {}],
-                  [2400, [0.5, 1], 'plain', {}], [2400, [0, 0.5], 'plain', {}], [1200, null, 'stretch', {tryDenoise: true}],
-                  [2000, [0.25, 0.75], 'stretch', {binarizer: 'GlobalHistogram'}]];
+                  [1600, null, 'plain', {}, 20], [1600, null, 'plain', {}, -20],
+                  [2000, null, 'plain', {tryDenoise: true}], [800, null, 'plain', {}], [600, null, 'plain', {}],
+                  [1200, null, 'sharp', {}], [1600, null, 'plain', {}, 40], [1600, null, 'plain', {}, -40],
+                  [3000, null, 'plain', {}], [2400, [0.5, 1], 'plain', {}], [2400, [0, 0.5], 'plain', {}],
+                  [800, null, 'sharp', {}], [1200, null, 'stretch', {tryDenoise: true}], [1200, null, 'sharp', {}, 20],
+                  [1200, null, 'sharp', {}, -20], [2000, [0.25, 0.75], 'stretch', {binarizer: 'GlobalHistogram'}],
+                  [1600, null, 'plain', {}, 30], [1600, null, 'plain', {}, -30], [1600, null, 'plain', {}, 10], [1600, null, 'plain', {}, -10]];
       for (var p = 0; p < plan.length && Date.now() - t0 < limit; p++) {
         tries++;
-        var rs = await read(grab(img, W, H, plan[p][0], plan[p][1], plan[p][2]), plan[p][3]);
+        var rs = await read(grab(img, W, H, plan[p][0], plan[p][1], plan[p][2], plan[p][4]), plan[p][3]);
         for (var i = 0; i < rs.length; i++) { var got = vote(rs[i], 'zxing-cpp step ' + (p + 1)); if (got) return got; }
         if (onStep && p % 3 === 2) onStep('Still reading the barcode… (' + tries + ' tries)');
         await pause();
@@ -147,23 +175,27 @@ var WMR_CAM = (function () {
     st.box.remove(); document.body.style.overflow = ''; st = null;
   }
   async function loop(s) {
-    var n = 0, last = null, lastN = 0;
+    var n = 0, hits = {};
     while (s.run) {
       var v = s.video, W = v.videoWidth, H = v.videoHeight;
       if (W && H && v.readyState >= 2) {
         n++;
         // alternate: the middle band at full detail (small barcodes), the whole frame smaller (big / turned ones),
         // and every 3rd frame a contrast-stretched copy (dim shelf, glare)
-        var k = n % 3, d = k === 1 ? WMR_DECODE.grab(v, W, H, 1600, [0.3, 0.7], 'plain')
+        // frames 4 and 5 are turned 20 degrees (slanted barcode), frame 6 sharpened (slightly out of focus)
+        var k = n % 6, d = k === 1 ? WMR_DECODE.grab(v, W, H, 1600, [0.3, 0.7], 'plain')
                           : k === 2 ? WMR_DECODE.grab(v, W, H, 1000, null, 'plain')
-                          : WMR_DECODE.grab(v, W, H, 1400, [0.2, 0.8], 'stretch');
+                          : k === 3 ? WMR_DECODE.grab(v, W, H, 1400, [0.2, 0.8], 'stretch')
+                          : k === 4 ? WMR_DECODE.grab(v, W, H, 1000, null, 'plain', 20)
+                          : k === 5 ? WMR_DECODE.grab(v, W, H, 1000, null, 'plain', -20)
+                          : WMR_DECODE.grab(v, W, H, 900, null, 'sharp');
         var rs = [];
         try { rs = await WMR_DECODE.read(d, {tryDownscale: k !== 1}); } catch (e) {}
         if (!s.run) return;
         if (rs.length) {
-          var c = rs[0].code;
-          if (c === last && n - lastN <= 8) { beep(); var cb = s.onCode; close(); cb(c); return; }
-          last = c; lastN = n;
+          var c = rs[0].code, h = hits[c] || (hits[c] = []);
+          h.push(n); while (h.length && n - h[0] > 30) h.shift();             // reads in the last ~3 seconds
+          if (h.length >= (rs[0].sure ? 2 : 3)) { beep(); var cb = s.onCode; close(); cb(c, rs[0].sure ? null : {short: true, printed: rs[0].printed}); return; }
           s.msg.textContent = 'Reading ' + c + '…';
         }
         s.frames = n;
