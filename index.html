@@ -381,8 +381,8 @@ function alertsOf(c) {
   var b = function (l) { return (c.badges || []).some(function (x) { return x.label === l; }); };
   var bnote = function (l) { var x = (c.badges || []).filter(function (x) { return x.label === l; })[0]; return x ? x.note : ''; };
   out.push(['Walmart sells it', s.checked ? (s.walmart_sells ? ['red', 'Yes'] : s.walmart_store ? ['yellow', 'Store only ' + usd(s.walmart_store) + ' (not shipped)'] : ['green', 'No']) : w.found ? (w.sells ? ['red', 'Yes'] : ['grey', 'Unknown']) : ['grey', 'Unknown']]);   // same rule as wmSells()
-  var bb = s.bb_price || w.price, ap = a.price;
-  out.push(['Buy Box suppressed', bb && ap ? (bb > ap * 1.3 ? ['yellow', 'Likely (Walmart far above Amazon)'] : ['green', 'No']) : ['grey', 'Unknown']]);
+  var su = supp(c);
+  out.push(['Buy Box suppressed', su.known ? (su.likely ? ['yellow', 'Likely (Walmart ' + usd(su.bb) + ' far above Amazon ' + usd(a.price) + ')'] : ['green', 'No']) : ['grey', 'Unknown']]);
   var n = Math.max(s.my_offer ? s.others : (s.count || 0), a.sellers || 0);
   out.push(['Private label', GENERIC.test(String(p.brand || '').trim()) || !p.brand ? ['red', 'Generic brand'] : n >= 3 ? ['green', 'No'] : ['grey', 'Unknown']]);
   var ap = c.approval || {};
@@ -491,13 +491,15 @@ function refresh(nAl) {
                                          : {ok: false, big: 'SKIP: max cost ' + usd(k.maxCost), small: 'Your cost ' + usd(ST.cost) + ' is above it (' + lbl + ')'};
   else V = k.maxCost < min ? {ok: false, big: 'SKIP: max cost ' + usd(k.maxCost), small: 'Under your Min max-buy ' + usd(min) + ' (' + lbl + ')'}
                            : {ok: true, big: 'BUY under ' + usd(k.maxCost), small: lbl + ' · enter your cost to check it'};
-  // Buy Box likely suppressed (Walmart far above Amazon, my own offer not counted): judge again at Amazon's price
-  var bbOthers = ((s.offers || []).filter(function (o) { return !o.me; })[0] || {}).total || ST.price;
-  if (V.ok && bbOthers && a.price && bbOthers > a.price * 1.3) {
-    var real = calc(Object.assign({}, ST, {price: a.price}));
-    if (!(ST.cost && ST.cost <= real.maxCost))
-      V = {ok: false, check: true, big: 'CHECK: Buy Box likely suppressed', small: 'At Amazon\'s ' + usd(a.price) + ' max cost is ' + usd(real.maxCost) + ' (' + lbl + ')'};
-    else V.small += ' · still clears at Amazon\'s ' + usd(a.price);
+  // Buy Box likely suppressed (same rule as the alert): judge again at the realistic price = lower of Amazon or the
+  // cheapest real retail store (Where to Buy, resale left out). BUY only if my ROI still clears there.
+  var su = supp(c);
+  if (V.ok && su.likely) {
+    var real = calc(Object.assign({}, ST, {price: su.real})), at = usd(su.real) + ' (' + su.from + ')';
+    if (ST.cost && real.roi != null && real.roi >= CFG.roi) V.small += ' · still clears at ' + at + ': ' + usd(real.profit) + ', ' + pct(real.roi) + ' ROI';
+    else V = {ok: false, check: true, big: 'CHECK: Buy Box likely suppressed',
+              small: ST.cost ? 'Profit at ' + at + ' would be ' + usd(real.profit) + ' (' + pct(real.roi) + ' ROI, ' + lbl + ')'
+                             : 'At ' + at + ' max cost is ' + usd(real.maxCost) + ' (' + lbl + ')'};
   }
   var ap = c.approval || {};
   if (V.ok && ap.status !== 'ok')
@@ -512,7 +514,7 @@ function refresh(nAl) {
     (plUnknown ? '<span class="pl">Private label: unknown</span>' : '') + '</div>' + apT +
     t('Alerts', nAl, nAl ? 'warn' : 'good') + t('Amazon sales/mo', num(a.sold), a.sold >= 300 ? 'good' : a.sold ? 'warn' : '') +
     t('Walmart sellers', s.checked ? num(nO) + (s.my_offer ? ' + you' : '') : '–', s.checked ? (nO <= 5 ? 'good' : nO <= 12 ? 'warn' : 'bad') : '') +
-    t('Max cost', usd(k.maxCost), k.maxCost != null ? (k.maxCost >= min ? 'good' : 'bad') : '') +
+    t('Max cost', usd(k.maxCost), k.maxCost != null && ST.cost ? (ST.cost <= k.maxCost ? 'good' : 'bad') : '') +
     '<div class="tile ' + (ST.cost ? (ST.cost <= k.maxCost ? 'good' : 'bad') : 'warn') + '"><div class="l">Cost price</div><input id="tCost" inputmode="decimal" value="' + (ST.cost || '') + '" placeholder="$"></div>' +
     '<div class="tile"><div class="l">Sale price</div><input id="tPrice" inputmode="decimal" value="' + (ST.price || '') + '"></div>' +
     t('Profit', usd(k.profit), g(k.profit, k.profit > 0)) + t('ROI', pct(k.roi), k.roi == null ? '' : k.roi >= CFG.roi ? 'good' : k.roi > 0 ? 'warn' : 'bad');
@@ -599,6 +601,17 @@ function saveCost() {
   call('cost', {upc: CARD.product.upc, cost: ST.cost, store: $('cStore').value, title: CARD.product.title}).then(function (sv) { CARD.saved = sv; toast('Cost saved for this UPC'); }).catch(fail);
 }
 // One rule for "Walmart sells it" (verdict + alert): the live seller list when checked, else Walmart's catalog flag.
+// Buy Box likely suppressed: Walmart's real Buy Box (shipped offers, not mine) more than 30% above Amazon.
+// real = the price it would actually sell at: lower of Amazon or the cheapest real retail store in Where to Buy.
+function supp(c) {
+  var s = c.sellers || {}, a = c.amazon || {}, w = c.walmart || {};
+  var bb = ((s.offers || []).filter(function (o) { return !o.me && !o.store_only; })[0] || {}).total || s.bb_price || w.price || null;
+  var st = [].concat(((c._stores || {}).offers) || [], ((c._lensStores || {}).offers) || []).filter(function (o) { return o.price > 0 && !o.resale; })
+    .sort(function (x, y) { return x.price - y.price; })[0];
+  var real = a.price || null, from = 'Amazon';
+  if (st && (!real || st.price < real)) { real = st.price; from = st.store; }
+  return {known: !!(bb && a.price), likely: !!(bb && a.price && bb > a.price * 1.3), bb: bb, real: real, from: from};
+}
 function wmSells(c) { var s = c.sellers || {}; return s.checked ? !!s.walmart_sells : !!(c.walmart || {}).sells; }
 // Money boxes: "1.88" or "1,88" -> 1.88 (2 decimals); empty/0 -> null
 function money(v) { var n = parseFloat(String(v == null ? '' : v).replace(',', '.').replace(/[^\d.]/g, '')); return isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null; }
@@ -653,7 +666,7 @@ function loadStores(force) {
   var c = CARD, p = c.product || {};
   if (!p.upc && !p.title) return;
   c._stores = 'loading'; drawStores();
-  call('stores', {upc: p.upc, title: p.title, brand: p.brand, force: !!force}).then(function (r) { if (CARD === c) { c._stores = r; drawStores(); } })
+  call('stores', {upc: p.upc, title: p.title, brand: p.brand, force: !!force}).then(function (r) { if (CARD === c) { c._stores = r; refresh(alertsOf(c).filter(function (x) { return x[1][0] === 'red' || x[1][0] === 'yellow'; }).length); } })
     .catch(function (e) { c._stores = {error: String(e.message || e)}; drawStores(); });
 }
 function drawStores() {
