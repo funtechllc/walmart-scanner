@@ -150,6 +150,20 @@ table.og{width:100%;table-layout:fixed;border:1px solid #cfd6df;border-collapse:
 .opg{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:5px;font-size:12px}.opg button{min-height:30px;min-width:40px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);font-size:15px}
 .ofoot{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:5px;font-size:12px;font-weight:700}
 @media (prefers-color-scheme: dark){.sh{background:#1d2530}.og th{background:#1d2530;border-color:#263140}.og td{border-color:#263140}.og tr:nth-child(even) td{background:#18202a}table.og{border-color:#263140}}
+
+/* tighter pass: Product Details + Quick Info on the first iPhone screen */
+.sh{min-height:28px}.sb{padding:5px 6px}.sec{margin-top:5px}.wrap{padding-top:4px}
+.prod img{width:64px;height:64px}.pt{font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.byl{font-size:12px;margin-top:1px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tagl{font-size:11.5px;color:var(--mut);margin-top:1px;line-height:1.5}.tagl .stag{margin:0 3px 0 0}
+.icons{margin-top:4px;gap:4px}.icons a,.icons button{width:40px;height:32px;font-size:8px}.icons .ic{font-size:13px}
+.pbox{margin-top:5px}.pbox>div{padding:3px 7px;display:flex;align-items:baseline;gap:5px;flex-wrap:wrap}.pbox .k{font-size:9.5px}.pbox .p{font-size:15px}.pbox .s{font-size:11px}
+.idl{margin-top:4px}.idl .idc{min-height:22px;font-size:10.5px}
+.mine{margin-top:4px;padding:3px 7px;font-size:11.5px;line-height:1.35}.mine b.t{font-size:10.5px}
+.tile .l{font-size:9px;padding:1px 2px}.tile .v{font-size:14px;padding:3px 2px}.tile input{min-height:26px;font-size:16px}
+.tile .apb button{min-height:20px;font-size:10.5px}.tile.warn .v.sm{font-size:11.5px;padding:2px 2px 1px}
+.verdict{padding:4px 8px}.verdict .vb{font-size:14.5px}.verdict .vs{font-size:11px;line-height:1.25}
+.acts .btn{min-height:32px}
 </style>
 </head>
 <body>
@@ -395,7 +409,7 @@ function render(c, keep) {      // keep: redraw the same card without losing the
   if (was) Object.assign(ST, was);
   var al = alertsOf(c), nAl = al.filter(function (x) { return x[1][0] === 'red' || x[1][0] === 'yellow'; }).length;
   var cat = (w.category || a.category || '').split(' / ').slice(-1)[0];
-  var rating = w.reviews ? '★ ' + (w.rating || '–') + ' · ' + num(w.reviews) + ' Walmart reviews' : a.rating ? '★ ' + a.rating + ' · ' + num(a.reviews) + ' Amazon reviews' : 'No reviews';
+  var rating = w.reviews ? '★ ' + (w.rating || '–') + ' (' + num(w.reviews) + ' WM)' : a.rating ? '★ ' + a.rating + ' (' + num(a.reviews) + ' AMZ)' : 'No reviews';
   var wUrl = w.wid ? 'https://www.walmart.com/ip/' + encodeURIComponent(w.wid) : 'https://www.walmart.com/search?q=' + encodeURIComponent(p.upc || p.title);
   var aUrl = a.asin ? 'https://www.amazon.com/dp/' + a.asin : 'https://www.amazon.com/s?k=' + encodeURIComponent(p.upc || p.title);
   var gUrl = 'https://www.google.com/search?q=' + encodeURIComponent(p.upc || p.title);
@@ -408,18 +422,18 @@ function render(c, keep) {      // keep: redraw the same card without losing the
   var aBox = '<div class="az"><div class="k">AMAZON</div><div class="p">' + (a.found === false ? 'Not found' : a.loaded === false ? '–' : usd(a.price)) + '</div><div class="s">' +
     (a.sold ? num(a.sold) + '/mo sold' : a.loaded === false ? 'not loaded' : 'sales unknown') + '</div></div>';
   var mi = c.mine || {};
-  var mineBox = mi.mine ? '<div class="mine"><b class="t">IN YOUR CATALOG</b> · <b>' + esc(mi.status) + '</b><br>SKU ' + esc(mi.sku) + ' · your price ' + usd(mi.price) +
+  var mineBox = mi.mine ? '<div class="mine"><b class="t">IN YOUR CATALOG</b> · <b>' + esc(mi.status) + '</b> · ' + esc(mi.sku) + ' · ' + usd(mi.price) +
     ' · stock ' + (mi.stock_wfs != null ? num(mi.stock_wfs) + ' WFS' + (mi.stock_self ? ' + ' + num(mi.stock_self) + ' SF' : '') : num(mi.stock_self != null ? mi.stock_self : mi.stock)) +
     (s.my_offer || mi.bb_winning != null ? '<br>Buy Box: ' + (mi.bb_winning === true ? '<b style="color:var(--good)">you win it</b>' : mi.bb_winning === false ? '<b style="color:var(--bad)">not yours</b> (Buy Box ' + usd(mi.bb_price) + ')' : 'not in the report yet') +
       (mi.bb_report ? ' <span class="m">· Walmart report ' + esc(mi.bb_report) + '</span>' : '') : '') + '</div>' : '';
   var chip = function (l, v) { return v ? '<span class="idc" data-copy="' + esc(v) + '"><b>' + l + '</b> ' + esc(v) + ' <span class="cp">⧉</span></span>' : ''; };
   var bi = c.brand || {}, bname = bi.name || p.brand || '';
   var byl = '<div class="byl">by ' + (bname ? '<span class="bn" id="bBrand">' + esc(bname) + '</span>' : '–') + (cat ? ' | ' + esc(cat) : '') +
-    (bi.source ? ' <span class="stag ' + esc(bi.source) + '" title="' + esc(bi.source_why || '') + '">' + esc(bi.source) + '</span>' : '') +
-    (bi.invoice ? '<span class="stag inv">Invoice recommended</span>' : '') +
-    (bi.mismatch ? '<div class="m" style="color:var(--warn)">Brand mismatch: Walmart <b>' + esc(bi.walmart) + '</b> · Amazon <b>' + esc(bi.amazon) + '</b> — check listing</div>' : '') + '</div>';
+    '</div>' + (bi.mismatch ? '<div class="m" style="color:var(--warn)">Brand mismatch: Walmart <b>' + esc(bi.walmart) + '</b> · Amazon <b>' + esc(bi.amazon) + '</b> — check listing</div>' : '');
+  var tagl = '<div class="tagl">' + (bi.source ? '<span class="stag ' + esc(bi.source) + '" title="' + esc(bi.source_why || '') + '">' + esc(bi.source) + '</span>' : '') +
+    (bi.invoice ? '<span class="stag inv">Invoice recommended</span>' : '') + esc(p.pack) + ' · ' + rating + (c.cached ? ' · saved' : '') + '</div>';
   var product = '<div class="prod">' + (p.image ? '<img src="' + esc(p.image) + '" alt="">' : '') + '<div style="min-width:0"><div class="pt">' + esc(p.title || 'Unknown product') + '</div>' + byl +
-    '<div class="m">' + esc(p.pack) + ' · ' + rating + (c.cached ? ' · saved scan' : '') + '</div>' +
+    tagl +
     '<div class="icons">' + icon(wUrl, '🛒', 'Walmart') + icon(aUrl, 'a', 'Amazon') + icon(gUrl, 'G', 'Google') + icon(sUrl, '📈', 'SAS') + icon(mUrl, '👥', 'MSP') + '</div></div></div>' +
     '<div id="brandBox"></div>' +
     '<div class="pbox">' + wBox + aBox + '</div>' +
