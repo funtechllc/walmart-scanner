@@ -167,6 +167,7 @@ table.og{width:100%;table-layout:fixed;border:1px solid #cfd6df;border-collapse:
 .pbox>div{flex-wrap:nowrap;white-space:nowrap;overflow:hidden}.pbox .s{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .tile .apb{padding:0 3px 2px}.tile .apb button{min-height:18px;font-size:10px;line-height:1}.tile.warn .v.sm{font-size:11px;padding:1px 2px 1px}
 .sec{margin-top:4px}.sb{padding:4px 6px}
+.g3{grid-template-columns:repeat(3,1fr)}.g3 .in{min-height:32px;padding:0 6px}.g3>div:last-child{grid-column:span 2}.seg button{min-height:30px}.fees{margin-top:5px!important}
 </style>
 </head>
 <body>
@@ -446,7 +447,7 @@ function render(c, keep) {      // keep: redraw the same card without losing the
   var alerts = '<div class="alerts">' + al.map(function (x) { return '<div><span class="an"><span class="dot ' + x[1][0] + '"></span>' + esc(x[0]) + '</span><span class="st">' + esc(x[1][1]) + '</span></div>'; }).join('') + '</div>';
   var opts = STORES.map(function (x) { return '<option' + (c.saved && c.saved.store === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('');
   var calcH = '<div class="seg" id="mSeg"><button data-m="wfs">WFS</button><button data-m="self">Seller Fulfilled</button></div>' +
-    '<div class="grid2" style="margin-top:8px"><div><div class="lab">Cost $</div><input class="in" id="cCost" inputmode="decimal" value="' + (ST.cost || '') + '"></div>' +
+    '<div class="grid2 g3" style="margin-top:5px"><div><div class="lab">Cost $</div><input class="in" id="cCost" inputmode="decimal" value="' + (ST.cost || '') + '"></div>' +
     '<div><div class="lab">Sale price $</div><input class="in" id="cPrice" inputmode="decimal" value="' + (ST.price || '') + '"></div>' +
     '<div><div class="lab">Store</div><select class="in" id="cStore"><option value="">–</option>' + opts + '</select></div>' +
     '<div><div class="lab">Quantity</div><input class="in" id="cQty" inputmode="numeric" value="1"></div>' +
@@ -563,7 +564,8 @@ function drawOffers() {
   el.innerHTML = '<table class="og"><colgroup><col style="width:8%"><col style="width:27%"><col style="width:13%"><col style="width:20%"><col style="width:17%"><col style="width:15%"></colgroup>' +
     '<tr><th>#</th><th>Type</th><th>Stock</th><th>Price</th><th>Profit</th><th>ROI</th></tr>' + (rows || '<tr><td colspan="6" class="n">No WFS offers</td></tr>') + '</table>' +
     (pages > 1 ? '<div class="opg"><button id="oPrev"' + (OFF.page ? '' : ' disabled') + '>‹</button>Page ' + (OFF.page + 1) + ' of ' + pages + '<button id="oNext"' + (OFF.page < pages - 1 ? '' : ' disabled') + '>›</button></div>' : '') +
-    '<div class="ofoot">Total: ' + all.length + ' <span class="tb WFS">WFS: ' + nW + '</span><span class="tb SF">SF: ' + nS + '</span>' + (nM ? '<span class="tb WM">WM</span>' : '') + '</div>';
+    '<div class="ofoot">Total: ' + Math.max(all.length, (CARD.sellers || {}).count || 0) + ' <span class="tb WFS">WFS: ' + nW + '</span><span class="tb SF">SF: ' + nS + '</span>' + (nM ? '<span class="tb WM">WM</span>' : '') + '</div>' +
+    (((CARD.sellers || {}).count || 0) > all.length ? '<div class="note">Showing the first ' + all.length + ' (saved scan). "Check again now" loads all of them.</div>' : '');
   if ($('oPrev')) $('oPrev').onclick = function () { OFF.page--; drawOffers(); };
   if ($('oNext')) $('oNext').onclick = function () { OFF.page++; drawOffers(); };
   el.querySelectorAll('tr[data-seller]').forEach(function (r) { r.onclick = function (e) { if (e.target.tagName !== 'A') toast(r.dataset.seller); }; });
