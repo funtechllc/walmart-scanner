@@ -88,7 +88,23 @@ var WMR_DECODE = (function () {
     var d = g.getImageData(0, 0, cw, ch);
     if (mode === 'stretch') stretch(d);
     if (mode === 'sharp') sharpen(d);
+    if (mode === 'bw') otsu(d);
     return d;
+  }
+  /** Black-and-white at the best split point (Otsu): what read a crumpled barcode in the 2026-11-14 tests. */
+  function otsu(d) {
+    var a = d.data, n = a.length / 4, hist = new Uint32Array(256), L = new Uint8ClampedArray(n);
+    for (var i = 0, j = 0; i < n; i++, j += 4) { L[i] = (a[j] * 299 + a[j + 1] * 587 + a[j + 2] * 114) / 1000; hist[L[i]]++; }
+    var sum = 0; for (var t = 0; t < 256; t++) sum += t * hist[t];
+    var sumB = 0, wB = 0, best = 0, th = 128;
+    for (var q = 0; q < 256; q++) {
+      wB += hist[q]; if (!wB) continue;
+      var wF = n - wB; if (!wF) break;
+      sumB += q * hist[q];
+      var mB = sumB / wB, mF = (sum - sumB) / wF, bt = wB * wF * (mB - mF) * (mB - mF);
+      if (bt > best) { best = bt; th = q; }
+    }
+    for (var z = 0, m = 0; z < n; z++, m += 4) a[m] = a[m + 1] = a[m + 2] = L[z] > th ? 255 : 0;
   }
   /** Unsharp mask on the grey image: helps slightly out-of-focus photos (phone held too close). */
   function sharpen(d) {
@@ -115,15 +131,62 @@ var WMR_DECODE = (function () {
   }
   var pause = function () { return new Promise(function (r) { setTimeout(r, 0); }); };
 
+  // ---- backup reader for photos: @zxing/library 0.21.3 (JavaScript), loaded only when a photo needs it.
+  // Long codes only (UPC-A / EAN-13); its UPC-E and Quagga gave false reads in the 2026-11-14 tests.
+  var jsLib = null;
+  function loadJs() {
+    if (!jsLib) jsLib = new Promise(function (ok, bad) {
+      if (window.ZXing) return ok();
+      var s = document.createElement('script'); s.src = 'vendor/zxing-library-0.21.3.min.js';
+      s.onload = function () { ok(); }; s.onerror = function () { jsLib = null; bad(new Error('backup reader did not load')); };
+      document.head.appendChild(s);
+    });
+    return jsLib;
+  }
+  var jsReader = null;
+  function jsRead(d) {
+    if (!jsReader) {
+      var hints = new Map();
+      hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.EAN_13]);
+      hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+      jsReader = new ZXing.MultiFormatReader(); jsReader.setHints(hints);
+    }
+    var a = d.data, n = d.width * d.height, L = new Uint8ClampedArray(n);
+    for (var i = 0, j = 0; i < n; i++, j += 4) L[i] = (a[j] * 299 + a[j + 1] * 587 + a[j + 2] * 114) / 1000;
+    var src = new ZXing.RGBLuminanceSource(L, d.width, d.height), bins = [ZXing.HybridBinarizer, ZXing.GlobalHistogramBinarizer];
+    for (var k = 0; k < bins.length; k++) {
+      try { var c = clean(jsReader.decodeWithState(new ZXing.BinaryBitmap(new bins[k](src))).getText(), ''); if (c) return c; } catch (e) {}
+    }
+    return null;
+  }
+  async function backup(img, W, H, deadline, count) {
+    try { await loadJs(); } catch (e) { return null; }
+    var plan = [[1600, null, 'plain', 0], [1600, null, 'plain', 90], [1600, [0.25, 0.75], 'plain', 0], [1600, null, 'stretch', 0],
+                [1600, [0.1, 0.9], 'plain', 0], [1600, [0.55, 1], 'plain', 0], [1600, [0, 0.45], 'plain', 0], [1000, null, 'plain', 0],
+                [1000, null, 'plain', 90], [1600, [0.25, 0.75], 'stretch', 90], [2200, [0.3, 0.7], 'plain', 0],
+                [1600, null, 'bw', 0], [1600, null, 'bw', 90], [1600, [0.55, 1], 'bw', 0], [1600, [0, 0.45], 'bw', 0],
+                [1600, [0.25, 0.75], 'bw', 0], [1000, null, 'bw', 0], [2200, [0.6, 1], 'plain', 0], [2200, [0, 0.4], 'plain', 0],
+                [1600, [0.55, 1], 'plain', 90], [1600, [0, 0.45], 'plain', 90], [1600, null, 'stretch', 90]];
+    for (var p = 0; p < plan.length && Date.now() < deadline; p++) {
+      count();
+      var c = jsRead(grab(img, W, H, plan[p][0], plan[p][1], plan[p][2], plan[p][3]));
+      if (c) return c;
+      await pause();
+    }
+    return null;
+  }
+
   /** A photo (File/Blob) -> {code, how, tries, ms} or {code: null, tries, ms}. */
   async function decode(blob, onStep, limitMs) {
     var t0 = Date.now(), limit = limitMs || 12000, tries = 0, seen = {};
     // EAN-13 / UPC-A (long, with guard bars): one read is enough. UPC-E (short) caused a false read in testing
     // (a slanted EAN-13 photo read as a UPC-E), so it is only taken when 3 different attempts agree.
+    var shortOne = null;      // a confirmed UPC-E is kept aside until the backup pass has looked for a long code
     var vote = function (r, how) {
       seen[r.code] = (seen[r.code] || 0) + 1;
-      return r.sure || seen[r.code] >= 3 ? {code: r.code, how: how, tries: tries, ms: Date.now() - t0,
-                                            short: !r.sure, printed: r.printed} : null;
+      if (r.sure) return {code: r.code, how: how, tries: tries, ms: Date.now() - t0};
+      if (seen[r.code] >= 3 && !shortOne) shortOne = {code: r.code, how: how, short: true, printed: r.printed};
+      return null;
     };
     await prep();
     var img = await loadImg(blob), W = img.naturalWidth, H = img.naturalHeight;
@@ -146,6 +209,11 @@ var WMR_DECODE = (function () {
         if (onStep && p % 3 === 2) onStep('Still reading the barcode… (' + tries + ' tries)');
         await pause();
       }
+      // backup pass: the JavaScript ZXing reader (the old scanner's) reads a few crumpled barcodes this one misses
+      if (onStep) onStep('Trying a second barcode reader…');
+      var b = await backup(img, W, H, t0 + limit, function () { tries++; });
+      if (b) return {code: b, how: 'zxing-js backup', tries: tries, ms: Date.now() - t0};
+      if (shortOne) { shortOne.tries = tries; shortOne.ms = Date.now() - t0; return shortOne; }
       return {code: null, tries: tries, ms: Date.now() - t0};
     } finally {
       URL.revokeObjectURL(img.src);
