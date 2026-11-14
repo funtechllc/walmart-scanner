@@ -730,7 +730,9 @@ function loadSet() {
     f('gTax', 'Sales tax on cost %', r2(c.tax * 100)) + f('gMo', 'WFS storage months', c.storage_months, 'numeric') + '</div>' +
     '<div class="lab" style="margin-top:8px">Default method</div><div class="seg" id="gM"><button data-m="wfs">WFS</button><button data-m="self">Seller Fulfilled</button></div>' +
     '<div class="lab" style="margin-top:8px">MultiSellerPro link (use {wid}, {upc} or {asin})</div><input class="in" id="gMsp" inputmode="url" value="' + esc(c.msp) + '" placeholder="https://…{wid}">' +
-    '<div class="row"><button class="btn pri" id="gSave" style="flex:1">Save</button></div><div class="note">ROI target, Min max-buy and size limits are the same settings Walmart Scout uses.</div>');
+    '<div class="row"><button class="btn pri" id="gSave" style="flex:1">Save</button></div><div class="note">ROI target, Min max-buy and size limits are the same settings Walmart Scout uses.</div>' +
+    '<div class="row" style="margin-top:10px"><button class="btn" id="gKey" style="flex:1">Copy scanner password</button></div><div class="note">For logging in the home-screen app or another phone: copy here, paste there.</div>');
+  $('gKey').onclick = function () { copy(K, 'Password copied'); };
   var m = c.method;
   var segs = function () { document.querySelectorAll('#gM button').forEach(function (b) { b.classList.toggle('on', b.dataset.m === m); }); };
   document.querySelectorAll('#gM button').forEach(function (b) { b.onclick = function () { m = b.dataset.m; segs(); }; }); segs();
