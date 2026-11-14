@@ -319,11 +319,13 @@ function alertsOf(c) {
   out.push(['Listing check', b('Listing check') ? ['yellow', 'Check brand, title, pack and images'] : ['green', 'No']]);
   return out;
 }
-function render(c) {
+function render(c, keep) {      // keep: redraw the same card without losing the cost / price / method typed in
+  var was = keep && CARD === c && ST ? {price: ST.price, cost: ST.cost, method: ST.method, tax: ST.tax, months: ST.months} : null;
   CARD = c; show('vScan'); $('hello').style.display = 'none';
   var p = c.product || {}, w = c.walmart || {}, a = c.amazon || {}, s = c.sellers || {};
   ST = {price: (c.sell || {}).price || null, cost: c.saved ? c.saved.cost : null, method: CFG.method, tax: CFG.tax,
         months: CFG.storage_months, qty: 1, cat: w.category || a.category, weight: p.weight_lb, dims: p.dims};
+  if (was) Object.assign(ST, was);
   var al = alertsOf(c), nAl = al.filter(function (x) { return x[1][0] === 'red' || x[1][0] === 'yellow'; }).length;
   var cat = (w.category || a.category || '').split(' / ').slice(-1)[0];
   var rating = w.reviews ? '★ ' + (w.rating || '–') + ' · ' + num(w.reviews) + ' Walmart reviews' : a.rating ? '★ ' + a.rating + ' · ' + num(a.reviews) + ' Amazon reviews' : 'No reviews';
@@ -427,7 +429,7 @@ function refresh(nAl) {
   document.querySelectorAll('[data-ap]').forEach(function (b) { b.onclick = function () {
     call('approval', {brand: (c.product || {}).brand, upc: (c.product || {}).upc, status: b.dataset.ap}).then(function (r) {
       c.approval = r.status === 'ok' ? {status: 'ok', why: 'Seller app said OK (today)'} : {status: 'needs', why: 'Seller app: selling requires approval (today)'};
-      toast('Saved for ' + (c.product || {}).brand); render(c); }).catch(fail); }; });
+      toast('Saved for ' + (c.product || {}).brand); render(c, true); }).catch(fail); }; });
   var q = Math.max(1, parseInt($('cQty').value, 10) || 1);
   $('fees').innerHTML = '<div><span>Sale price</span><span>' + usd(ST.price) + '</span></div>' +
     '<div><span>Referral fee (' + Math.round(k.ref * 100) + '%)</span><span>-' + usd(k.refAmt) + '</span></div>' +
