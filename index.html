@@ -88,6 +88,68 @@ td{padding:7px 2px;border-top:1px solid var(--line);vertical-align:top}td.r,th.r
 .match img{width:52px;height:52px;object-fit:contain;background:#fff;border-radius:6px}
 svg text{fill:var(--mut);font-size:10px}
 input[type=range]{width:100%}
+
+/* ---- compact SellerAmp-style card (Matt 2026-11-14) ---- */
+.wrap{padding:6px 6px 90px}
+.sec{border-radius:6px;margin-top:6px}
+.sh{min-height:32px;padding:0 8px;font-size:13px;font-weight:700;letter-spacing:0;background:#e9edf2;border-bottom:1px solid var(--line)}
+.sh .si{display:inline-block;width:18px;text-align:center;margin-right:5px;font-size:13px}
+.sh .ch{display:inline-block;font-size:12px}.sec.closed .ch{transform:rotate(180deg)}.sec.closed .sh{border-bottom:0}
+.sb{padding:6px}
+.prod{gap:8px}.prod img{width:76px;height:76px;border-radius:6px}
+.pt{font-size:14px;line-height:1.25}.m{font-size:12px}
+.byl{font-size:12.5px;margin-top:2px;line-height:1.5}.byl .bn{font-weight:800;color:var(--wm);cursor:pointer;text-decoration:underline dotted}
+.stag{display:inline-block;font-size:10px;font-weight:800;border-radius:4px;padding:0 5px;margin-left:3px;vertical-align:1px;border:1px solid var(--line);background:var(--grey-bg);color:var(--fg)}
+.stag.Retail{background:#e7f6ec;color:#15803d;border-color:#bfe5cb}.stag.Wholesale{background:#e0ecff;color:#1e40af;border-color:#bfd3fb}
+.stag.Amazon-native{background:#fff1e6;color:#c2410c;border-color:#fed7aa}.stag.inv{background:#fff4d6;color:#92400e;border-color:#f5dfa0}
+.brandbox{margin-top:6px;border:1px solid var(--line);border-radius:6px;padding:6px;font-size:12.5px}
+.brandbox .bl{display:flex;gap:6px;padding:3px 0;border-top:1px solid var(--line)}.brandbox .bl:first-of-type{border-top:0}
+.brandbox .bl span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icons{display:flex;gap:5px;margin-top:6px}
+.icons a,.icons button{flex:none;width:44px;height:38px;min-height:0;border:0;border-radius:6px;background:var(--wm);color:#fff;font-size:8.5px;font-weight:700;gap:0;padding:0}
+.icons .ic{font-size:15px;line-height:1.1}
+.pbox{gap:6px;margin-top:6px}.pbox>div{border-radius:6px;padding:4px 8px}.pbox .k{font-size:10px}.pbox .p{font-size:16px}.pbox .s{font-size:11.5px}
+.idl{gap:4px;margin-top:5px;flex-wrap:nowrap;overflow:hidden}
+.idl .idc{min-height:24px;font-size:11px;padding:0 5px;border-radius:5px;white-space:nowrap;gap:3px}.idl .idc .cp{opacity:.6;font-size:11px}
+.mine{margin-top:6px;border-width:1px;border-radius:6px;padding:5px 8px;font-size:12.5px}
+.tiles{gap:4px}
+.tile{border:1px solid var(--line);border-radius:6px;padding:0;min-height:0;background:var(--card);overflow:hidden;justify-content:flex-start}
+.tile .l{background:var(--grey-bg);text-align:center;font-size:9.5px;padding:2px 2px;border-bottom:1px solid var(--line);letter-spacing:.02em}
+.tile .v{text-align:center;font-size:15px;margin:0;padding:5px 2px;flex:1;display:flex;align-items:center;justify-content:center}
+.tile.good .v{background:var(--good-bg)}.tile.bad .v{background:var(--bad-bg)}.tile.warn .v{background:var(--warn-bg)}
+.tile.good,.tile.bad,.tile.warn{background:var(--card)}
+.tile input{border:0;border-radius:0;text-align:center;font-size:16px;min-height:30px;padding:2px;background:transparent}
+.tile.good input{background:var(--good-bg)}.tile.bad input{background:var(--bad-bg)}.tile.warn input{background:var(--warn-bg)}
+.tile .apb{display:flex;gap:3px;padding:0 3px 3px;background:var(--warn-bg)}.tile .apb button{flex:1;min-height:24px;font-size:11px;padding:0;border-radius:4px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+.tile.warn .v.sm{font-size:12px;padding:3px 2px 2px}
+.verdict{border-radius:6px;padding:5px 9px}.verdict .vb{font-size:15px;line-height:1.25}.verdict .vs{font-size:11.5px}
+.verdict .pl{margin:2px 0 0;font-size:10.5px}
+.row{gap:5px;margin-top:5px}.btn{min-height:36px;padding:0 10px;border-radius:6px;font-size:14px}
+.acts{display:flex;gap:4px;margin-top:5px}.acts .btn{min-height:34px;font-size:13.5px;padding:0 8px}
+.alerts{border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.alerts div{padding:4px 6px;gap:6px;font-size:12.5px;border-top:1px solid var(--line)}
+.alerts div:nth-child(even){background:var(--grey-bg)}
+.alerts .an{flex:0 0 46%;border-right:1px solid var(--line);display:flex;align-items:center;gap:6px;align-self:stretch}
+.alerts .st{margin-left:0;flex:1;text-align:left;font-size:12px;color:var(--fg)}.dot{width:9px;height:9px}
+.seg button{min-height:34px;font-size:13.5px}.in{min-height:36px;border-radius:6px}.lab{font-size:11px;margin-bottom:1px}.grid2{gap:5px}
+.fees div{padding:3px 0;font-size:12.5px}.note{font-size:11.5px;margin-top:5px}
+.wb{padding:5px 0;font-size:12.5px}.wb .st{min-width:80px}
+/* offers grid */
+.otog{display:flex;gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:5px;width:max-content}
+.otog button{border:0;background:var(--card);color:var(--fg);font:inherit;font-size:12.5px;font-weight:600;padding:5px 12px;min-height:30px}.otog button.on{background:var(--wm);color:#fff}
+table.og{width:100%;table-layout:fixed;border:1px solid #cfd6df;border-collapse:collapse;font-size:12px}
+.og th{background:#eef1f5;color:var(--fg);font-size:10.5px;text-transform:none;font-weight:700;padding:4px 3px;border:1px solid #cfd6df;text-align:center}
+.og td{padding:3px 3px;border:1px solid #dde3ea;vertical-align:middle;text-align:center;overflow:hidden}
+.og tr:nth-child(even) td{background:#f7f9fb}.og td.n{color:var(--mut);font-size:11px}
+.og .sn{display:block;font-size:10px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.og .pr{font-weight:700}.og .sub{display:block;font-size:10px;color:var(--mut);white-space:nowrap}
+.og .pos{color:var(--good);font-weight:700}.og .neg{color:var(--bad);font-weight:700}
+.tb{display:inline-block;font-size:10px;font-weight:800;border-radius:4px;padding:1px 4px;line-height:1.3}
+.tb.WFS{background:#16a34a;color:#fff}.tb.WFSq{background:#bbf7d0;color:#14532d}.tb.SF{background:#e7d3b1;color:#5b4320}.tb.WM{background:#ffc220;color:#111}
+.tb.na{background:#e5e7eb;color:#4b5563}.tb.YOU{background:#0071dc;color:#fff}
+.opg{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:5px;font-size:12px}.opg button{min-height:30px;min-width:40px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);font-size:15px}
+.ofoot{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:5px;font-size:12px;font-weight:700}
+@media (prefers-color-scheme: dark){.sh{background:#1d2530}.og th{background:#1d2530;border-color:#263140}.og td{border-color:#263140}.og tr:nth-child(even) td{background:#18202a}table.og{border-color:#263140}}
 </style>
 </head>
 <body>
@@ -277,9 +339,11 @@ function shrink(file, max) {
 
 // ---------------------------------------------------------- collapsible sections (remembered per phone)
 var OPEN = lsGet('wmr_open', {product: 1, quick: 1, alerts: 1, calc: 1, offers: 1, where: 0, details: 0, charts: 0});
+var SEC_ICON = {product: '📦', quick: 'ⓘ', alerts: '⚠', calc: '🧮', offers: '🏷', where: '🛍', details: '☰', charts: '📈'};
 function sec(id, title, body, right) {
   var open = OPEN[id] !== 0 && OPEN[id] !== false;
-  return '<div class="sec' + (open ? '' : ' closed') + '" data-s="' + id + '"><div class="sh"><span>' + title + '</span><span>' + (right || '') + ' <span class="ch">▾</span></span></div><div class="sb">' + body + '</div></div>';
+  var ic = SEC_ICON[id] ? '<span class="si">' + SEC_ICON[id] + '</span>' : '';
+  return '<div class="sec' + (open ? '' : ' closed') + '" data-s="' + id + '"><div class="sh"><span>' + ic + title + '</span><span>' + (right || '') + ' <span class="ch">▲</span></span></div><div class="sb">' + body + '</div></div>';
 }
 function wireSecs() {
   document.querySelectorAll('.sec .sh').forEach(function (h) {
@@ -298,7 +362,7 @@ function alertsOf(c) {
   var p = c.product || {}, w = c.walmart || {}, a = c.amazon || {}, s = c.sellers || {}, t = (p.title || '') + ' ' + (w.category || ''), out = [];
   var b = function (l) { return (c.badges || []).some(function (x) { return x.label === l; }); };
   var bnote = function (l) { var x = (c.badges || []).filter(function (x) { return x.label === l; })[0]; return x ? x.note : ''; };
-  out.push(['Walmart sells it', s.checked ? (s.walmart_sells ? ['red', 'Yes'] : ['green', 'No']) : w.found ? (w.sells ? ['red', 'Yes'] : ['grey', 'Unknown']) : ['grey', 'Unknown']]);   // same rule as wmSells()
+  out.push(['Walmart sells it', s.checked ? (s.walmart_sells ? ['red', 'Yes'] : s.walmart_store ? ['yellow', 'Store only ' + usd(s.walmart_store) + ' (not shipped)'] : ['green', 'No']) : w.found ? (w.sells ? ['red', 'Yes'] : ['grey', 'Unknown']) : ['grey', 'Unknown']]);   // same rule as wmSells()
   var bb = s.bb_price || w.price, ap = a.price;
   out.push(['Buy Box suppressed', bb && ap ? (bb > ap * 1.3 ? ['yellow', 'Likely (Walmart far above Amazon)'] : ['green', 'No']) : ['grey', 'Unknown']]);
   var n = Math.max(s.my_offer ? s.others : (s.count || 0), a.sellers || 0);
@@ -315,12 +379,15 @@ function alertsOf(c) {
   var big = dims && dims.length >= 3 && dims.slice(0, 3).map(Number).sort(function (x, y) { return y - x; }).some(function (d, i) { return d > [L.max_l, L.max_w, L.max_h].sort(function (x, y) { return y - x; })[i] + 0.05; });
   out.push(['Size tier / bulky', !wt && !dims ? ['grey', 'Unknown - add size'] : (wt > L.max_lb ? ['red', 'Over ' + L.max_lb + ' lb'] : big ? ['red', 'Bigger than ' + L.max_l + 'x' + L.max_w + 'x' + L.max_h] :
     ['green', (wt ? wt + ' lb' : '? lb') + (cf ? ' · ' + cf.toFixed(2) + ' cu ft' : '')])]);
+  var bi = c.brand || {};
+  if (bi.mismatch) out.push(['Brand mismatch', ['yellow', 'Check listing: Walmart ' + bi.walmart + ' · Amazon ' + bi.amazon]]);
   out.push(['Kirkland', b('Kirkland') ? ['yellow', 'Kirkland: may be gated on Amazon'] : ['green', 'No']]);
   out.push(['Listing check', b('Listing check') ? ['yellow', 'Check brand, title, pack and images'] : ['green', 'No']]);
   return out;
 }
 function render(c, keep) {      // keep: redraw the same card without losing the cost / price / method typed in
   var was = keep && CARD === c && ST ? {price: ST.price, cost: ST.cost, method: ST.method, tax: ST.tax, months: ST.months} : null;
+  if (CARD !== c) OFF = {page: 0, f: 'all'};
   CARD = c; show('vScan'); $('hello').style.display = 'none';
   var p = c.product || {}, w = c.walmart || {}, a = c.amazon || {}, s = c.sellers || {};
   ST = {price: (c.sell || {}).price || null, cost: c.saved ? c.saved.cost : null, method: CFG.method, tax: CFG.tax,
@@ -334,7 +401,7 @@ function render(c, keep) {      // keep: redraw the same card without losing the
   var gUrl = 'https://www.google.com/search?q=' + encodeURIComponent(p.upc || p.title);
   var sUrl = 'https://sas.selleramp.com/sas/lookup?SasLookup%5Bsearch_term%5D=' + encodeURIComponent(a.asin || p.upc || '');
   var mUrl = CFG.msp ? CFG.msp.replace('{wid}', encodeURIComponent(w.wid || '')).replace('{upc}', encodeURIComponent(p.upc || '')).replace('{asin}', encodeURIComponent(a.asin || '')) : '';
-  var icon = function (href, ic, l) { return href ? '<a target="_blank" rel="noopener" href="' + esc(href) + '"><span class="ic">' + ic + '</span>' + l + '</a>' : '<button data-a="msp"><span class="ic">' + ic + '</span>' + l + '</button>'; };
+  var icon = function (href, ic, l) { return href ? '<a target="_blank" rel="noopener" href="' + esc(href) + '" title="' + l + '" aria-label="' + l + '"><span class="ic">' + ic + '</span>' + l + '</a>' : '<button data-a="msp" title="' + l + '" aria-label="' + l + '"><span class="ic">' + ic + '</span>' + l + '</button>'; };
   var nOthers = s.checked ? (s.my_offer ? s.others : s.count) : null;
   var wBox = '<div class="wm"><div class="k">WALMART</div><div class="p">' + (w.found || s.bb_price ? usd(s.bb_price || w.price) : 'Not listed') + '</div><div class="s">' +
     (s.checked ? num(nOthers) + ' seller' + (nOthers === 1 ? '' : 's') + (s.my_offer ? ' + you' : '') : w.found ? 'sellers not checked' : 'first to sell?') + (s.store_price_note ? ' · store price' : '') + '</div></div>';
@@ -345,16 +412,21 @@ function render(c, keep) {      // keep: redraw the same card without losing the
     ' · stock ' + (mi.stock_wfs != null ? num(mi.stock_wfs) + ' WFS' + (mi.stock_self ? ' + ' + num(mi.stock_self) + ' SF' : '') : num(mi.stock_self != null ? mi.stock_self : mi.stock)) +
     (s.my_offer || mi.bb_winning != null ? '<br>Buy Box: ' + (mi.bb_winning === true ? '<b style="color:var(--good)">you win it</b>' : mi.bb_winning === false ? '<b style="color:var(--bad)">not yours</b> (Buy Box ' + usd(mi.bb_price) + ')' : 'not in the report yet') +
       (mi.bb_report ? ' <span class="m">· Walmart report ' + esc(mi.bb_report) + '</span>' : '') : '') + '</div>' : '';
-  var chip = function (l, v) { return v ? '<span class="idc" data-copy="' + esc(v) + '">' + l + ' ' + esc(v) + '</span>' : ''; };
-  var product = '<div class="prod">' + (p.image ? '<img src="' + esc(p.image) + '" alt="">' : '') + '<div><div class="pt">' + esc(p.title || 'Unknown product') + '</div>' +
-    '<div class="m">' + esc(p.brand || '–') + (cat ? ' · ' + esc(cat) : '') + ' · ' + esc(p.pack) + '</div><div class="m">' + rating + '</div>' +
-    (c.cached ? '<div class="m">Saved scan (under 24 h)</div>' : '') + '</div></div>' +
+  var chip = function (l, v) { return v ? '<span class="idc" data-copy="' + esc(v) + '"><b>' + l + '</b> ' + esc(v) + ' <span class="cp">⧉</span></span>' : ''; };
+  var bi = c.brand || {}, bname = bi.name || p.brand || '';
+  var byl = '<div class="byl">by ' + (bname ? '<span class="bn" id="bBrand">' + esc(bname) + '</span>' : '–') + (cat ? ' | ' + esc(cat) : '') +
+    (bi.source ? ' <span class="stag ' + esc(bi.source) + '" title="' + esc(bi.source_why || '') + '">' + esc(bi.source) + '</span>' : '') +
+    (bi.invoice ? '<span class="stag inv">Invoice recommended</span>' : '') +
+    (bi.mismatch ? '<div class="m" style="color:var(--warn)">Brand mismatch: Walmart <b>' + esc(bi.walmart) + '</b> · Amazon <b>' + esc(bi.amazon) + '</b> — check listing</div>' : '') + '</div>';
+  var product = '<div class="prod">' + (p.image ? '<img src="' + esc(p.image) + '" alt="">' : '') + '<div style="min-width:0"><div class="pt">' + esc(p.title || 'Unknown product') + '</div>' + byl +
+    '<div class="m">' + esc(p.pack) + ' · ' + rating + (c.cached ? ' · saved scan' : '') + '</div>' +
+    '<div class="icons">' + icon(wUrl, '🛒', 'Walmart') + icon(aUrl, 'a', 'Amazon') + icon(gUrl, 'G', 'Google') + icon(sUrl, '📈', 'SAS') + icon(mUrl, '👥', 'MSP') + '</div></div></div>' +
+    '<div id="brandBox"></div>' +
     '<div class="pbox">' + wBox + aBox + '</div>' +
-    '<div class="idl">' + chip('UPC', p.upc) + chip('ASIN', a.asin) + chip('WM', w.wid) + '</div>' + mineBox +
-    '<div class="icons">' + icon(wUrl, '🛒', 'Walmart') + icon(aUrl, '📦', 'Amazon') + icon(gUrl, 'G', 'Google') + icon(sUrl, '📈', 'SellerAmp') + icon(mUrl, '👥', 'MultiSeller') + '</div>';
-  var quick = '<div class="tiles" id="tiles"></div><div class="row"><button class="btn" id="bSkip">Skip</button><button class="btn pri" id="bWill" style="flex:1">★ Will Buy</button>' +
+    '<div class="idl">' + chip('UPC', p.upc) + chip('ASIN', a.asin) + chip('WM', w.wid) + '</div>' + mineBox;
+  var quick = '<div class="tiles" id="tiles"></div><div class="acts"><button class="btn" id="bSkip">Skip</button><button class="btn pri" id="bWill" style="flex:1">★ Will Buy</button>' +
     '<button class="btn" id="bSell">Sell on WMT</button></div><div id="frm"></div>';
-  var alerts = '<div class="alerts">' + al.map(function (x) { return '<div><span class="dot ' + x[1][0] + '"></span>' + esc(x[0]) + '<span class="st">' + esc(x[1][1]) + '</span></div>'; }).join('') + '</div>';
+  var alerts = '<div class="alerts">' + al.map(function (x) { return '<div><span class="an"><span class="dot ' + x[1][0] + '"></span>' + esc(x[0]) + '</span><span class="st">' + esc(x[1][1]) + '</span></div>'; }).join('') + '</div>';
   var opts = STORES.map(function (x) { return '<option' + (c.saved && c.saved.store === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('');
   var calcH = '<div class="seg" id="mSeg"><button data-m="wfs">WFS</button><button data-m="self">Seller Fulfilled</button></div>' +
     '<div class="grid2" style="margin-top:8px"><div><div class="lab">Cost $</div><input class="in" id="cCost" inputmode="decimal" value="' + (ST.cost || '') + '"></div>' +
@@ -364,10 +436,10 @@ function render(c, keep) {      // keep: redraw the same card without losing the
     '<div><div class="lab">Sales tax %</div><input class="in" id="cTax" inputmode="decimal" value="' + r2(ST.tax * 100) + '"></div>' +
     '<div><div class="lab">Storage months: <b id="moV">' + ST.months + '</b></div><input type="range" id="cMo" min="0" max="12" step="1" value="' + ST.months + '"></div></div>' +
     '<div class="fees" id="fees" style="margin-top:8px"></div>' + (c.saved ? '<div class="note">Cost saved ' + esc(c.saved.date) + (c.saved.store ? ' · ' + esc(c.saved.store) : '') + '</div>' : '');
-  var offers = (s.offers || []).length ? '<table><tr><th>Seller</th><th class="r">Price</th><th>Arrives</th><th>Stock</th><th class="r">If matched</th></tr><tbody id="offRows"></tbody></table>' +
-    '<div class="note">' + num(s.count) + ' seller' + (s.count === 1 ? '' : 's') + ' in stock' + (s.my_offer ? ' (incl. you)' : '') +
-    '. Badges: WFS? = free and arrives within 2 business days (likely WFS), SF = paid shipping (Seller Fulfilled for sure), – = unknown. Walmart\'s data has no confirmed WFS flag per seller. Stock: MultiSellerPro for now (Stage 9 extension later).</div>' +
-    (s.store_price_note ? '<div class="note">' + esc(s.store_price_note) + ' (Walmart.com lists it like this online too). Sale price uses the lowest other seller.</div>' : '')
+  var offers = (s.offers || []).length ? '<div class="otog" id="oTog"><button data-f="all">All</button><button data-f="wfs">WFS only</button></div><div id="offGrid"></div>' +
+    '<div class="note">WFS? = free and arrives within 2 business days (likely WFS) · SF = paid shipping (Seller Fulfilled for sure) · WM = Walmart.com · – = unknown. Walmart\'s data has no confirmed WFS flag. Tap a row for the seller. Stock: MultiSellerPro for now.</div>' +
+    (s.walmart_store ? '<div class="note">Walmart.com ' + usd(s.walmart_store) + ' is an in-store / pickup price (Walmart\'s page says store fulfillment, no delivery date), so it is not counted as the Buy Box.</div>' : '') +
+    (s.store_price_note ? '<div class="note">' + esc(s.store_price_note) + '. Sale price uses the lowest other seller.</div>' : '')
     : '<div class="note">' + esc(s.checked ? 'No sellers in stock.' : (s.why || 'Sellers not checked')) + '</div>';
   var details = '<div style="color:var(--wm);font-weight:700;font-size:13px">WALMART</div><div class="m" style="color:var(--fg)">' +
     (w.found ? (s.bb_price ? 'Buy Box ' + usd(s.bb_price) + ' · ' + esc(s.bb_seller) : 'Price ' + usd(w.price)) + ' · sell price basis: ' + esc((c.sell || {}).basis || '–') +
@@ -381,9 +453,9 @@ function render(c, keep) {      // keep: redraw the same card without losing the
     '<div class="row"><button class="btn" id="bSize">' + (p.dims || p.weight_lb ? 'Change size' : 'Add size') + '</button><button class="btn" id="bRe">Check again now (new search)</button></div>';
   var charts = '<div id="charts"><div class="note">Charts load only when this section is open (Amazon from Keepa, ~2 tokens; Walmart from your own saved lookups, free).</div></div>';
   var starBtn = '<button class="star' + (c.starred ? ' on' : '') + '" id="bStar" aria-label="Will Buy star" title="Star = Will Buy">' + (c.starred ? '★' : '☆') + '</button>';
-  $('out').innerHTML = sec('product', 'PRODUCT DETAILS', product, starBtn) + sec('quick', 'QUICK INFO', quick) + sec('alerts', 'ALERTS', alerts, nAl ? '<b style="color:var(--bad)">' + nAl + '</b>' : '') +
-    sec('calc', 'PROFIT CALCULATOR', calcH) + sec('offers', 'OFFERS', offers, s.count != null ? num(s.count) : '') +
-    sec('where', 'WHERE TO BUY', '<div id="where"></div>') + sec('details', 'WALMART & AMAZON DETAILS', details) + sec('charts', 'CHARTS', charts);
+  $('out').innerHTML = sec('product', 'Product Details', product, starBtn) + sec('quick', 'Quick Info', quick) + sec('alerts', 'Alerts', alerts, nAl ? '<b style="color:var(--bad)">' + nAl + '</b>' : '') +
+    sec('calc', 'Profit Calculator', calcH) + sec('offers', 'Offers', offers, s.count != null ? num(s.count) : '') +
+    sec('where', 'Where to Buy', '<div id="where"></div>') + sec('details', 'Walmart & Amazon Details', details) + sec('charts', 'Charts', charts);
   if (c.upc) $('q').value = c.upc;
   if (LENSPICK) { c._lensStores = lensStores(LENSPICK); LENSPICK = null; }
   wireSecs(); wireCard(c, nAl);
@@ -416,8 +488,8 @@ function refresh(nAl) {
   var nO = s.my_offer ? s.others : s.count;
   var t = function (l, v, cls, wide) { return '<div class="tile ' + (cls || '') + (wide ? ' wide' : '') + '"><div class="l">' + l + '</div><div class="v">' + v + '</div></div>'; };
   var g = function (v, okIf) { return v == null ? '' : okIf ? 'good' : 'bad'; };
-  var apT = ap.status === 'ok' ? t('Approval', 'Not needed', 'good') : '<div class="tile warn"><div class="l">Approval</div><div class="v" style="font-size:14px">' + (ap.status === 'needs' ? 'Needed' : 'Check Seller app') +
-    '</div>' + ((c.product || {}).brand ? '<div style="display:flex;gap:4px;margin-top:4px"><button class="btn" data-ap="ok" style="min-height:30px;padding:0 6px;font-size:12px">OK</button><button class="btn" data-ap="needs" style="min-height:30px;padding:0 6px;font-size:12px">Needs</button></div>' : '') + '</div>';
+  var apT = ap.status === 'ok' ? t('Approval', 'Not needed', 'good') : '<div class="tile warn"><div class="l">Approval</div><div class="v sm">' + (ap.status === 'needs' ? 'Needed' : 'Check Seller app') +
+    '</div>' + ((c.product || {}).brand ? '<div class="apb"><button data-ap="ok">OK</button><button data-ap="needs">Needs</button></div>' : '') + '</div>';
   $('tiles').innerHTML = '<div class="verdict ' + (V.ok ? 'buy' : V.check ? 'check' : 'skip') + '"><div class="vb">' + esc(V.big) + '</div><div class="vs">' + esc(V.small) + '</div>' +
     (plUnknown ? '<span class="pl">Private label: unknown</span>' : '') + '</div>' + apT +
     t('Alerts', nAl, nAl ? 'warn' : 'good') + t('Amazon sales/mo', num(a.sold), a.sold >= 300 ? 'good' : a.sold ? 'warn' : '') +
@@ -441,22 +513,63 @@ function refresh(nAl) {
     (q > 1 ? '<div class="tot"><span>× ' + q + ' units: buy ' + usd(k.landed != null ? k.landed * q : null) + '</span><span>profit ' + usd(k.profit != null ? k.profit * q : null) + '</span></div>' : '') +
     '<div class="note">Other method (' + (ST.method === 'wfs' ? 'Seller Fulfilled' : 'WFS') + '): max cost ' + usd(other.maxCost) + (other.profit != null ? ', profit ' + usd(other.profit) : '') + '</div>';
   document.querySelectorAll('#mSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.m === ST.method); });
-  var rows = $('offRows');
+  drawOffers();
   var mspUrl = function () { var w = CARD.walmart || {}, p = CARD.product || {}; return CFG.msp ? CFG.msp.replace('{wid}', encodeURIComponent(w.wid || '')).replace('{upc}', encodeURIComponent(p.upc || '')).replace('{asin}', encodeURIComponent((CARD.amazon || {}).asin || '')) : ''; };
-  if (rows) rows.innerHTML = ((CARD.sellers || {}).offers || []).map(function (o) {
-    var kk = calc(Object.assign({}, ST, {price: o.total}));
-    var f = o.ful || '–', fb = o.me ? '<span class="fb me">YOU</span>' : o.walmart ? '<span class="fb wm">WALMART</span>' : f === 'WFS' ? '<span class="fb wfs">WFS</span>' : f === 'WFS?' ? '<span class="fb wfsq">WFS?</span>' : f === 'SF' ? '<span class="fb sf">SF</span>' : '<span class="m"> –</span>';
-    var mu = mspUrl();
-    return '<tr' + (f === 'WFS' || f === 'WFS?' ? ' class="wfs"' : '') + '><td>' + esc(o.seller) + fb + (o.store_price ? '<div class="m">store-style price</div>' : '') + '</td>' +
-      '<td class="r" style="white-space:nowrap">' + usd(o.price) + ' <span class="m">' + (o.ship ? '+' + usd(o.ship) : 'free ship') + '</span></td>' +
-      '<td style="white-space:nowrap">' + esc(shortDate(o.delivery)) + '</td><td>–' + (mu ? ' <a class="m" target="_blank" rel="noopener" href="' + esc(mu) + '">check</a>' : '') + '</td>' +
-      '<td class="r">' + (kk.profit != null ? '<b style="color:' + (kk.profit > 0 ? 'var(--good)' : 'var(--bad)') + '">' + usd(kk.profit) + '</b><div class="m">' + pct(kk.roi) + '</div>' : '<span class="m">add cost</span>') + '</td></tr>';
-  }).join('');
   drawStores();
   var tc = $('tCost'), tp = $('tPrice');
   tc.oninput = function () { ST.cost = money(tc.value); $('cCost').value = tc.value; refreshKeep(nAl, 'tCost'); };
   tp.oninput = function () { ST.price = money(tp.value); $('cPrice').value = tp.value; refreshKeep(nAl, 'tPrice'); };
   tc.onchange = saveCost;
+}
+// ---------------------------------------------------------- OFFERS grid (SellerAmp style): # | Type | Stock | Price | Profit | ROI
+var OFF = {page: 0, f: 'all'};
+function offType(o) { return o.me ? 'YOU' : o.walmart ? 'WM' : o.ful === 'WFS' ? 'WFS' : o.ful === 'WFS?' ? 'WFS?' : o.ful === 'SF' ? 'SF' : '–'; }
+function drawOffers() {
+  var el = $('offGrid'); if (!el || !CARD || !ST) return;
+  var all = (CARD.sellers || {}).offers || [];
+  var list = OFF.f === 'wfs' ? all.filter(function (o) { var y = offType(o); return y === 'WFS' || y === 'WFS?'; }) : all;
+  var pages = Math.max(1, Math.ceil(list.length / 10)); if (OFF.page >= pages) OFF.page = pages - 1;
+  var mu = CFG.msp ? CFG.msp.replace('{wid}', encodeURIComponent((CARD.walmart || {}).wid || '')).replace('{upc}', encodeURIComponent((CARD.product || {}).upc || '')).replace('{asin}', encodeURIComponent((CARD.amazon || {}).asin || '')) : '';
+  var rows = list.slice(OFF.page * 10, OFF.page * 10 + 10).map(function (o, i) {
+    var y = offType(o), k = o.store_only ? {} : calc(Object.assign({}, ST, {price: o.total}));
+    var pc = k.profit == null ? '' : k.profit >= 0 ? 'pos' : 'neg';
+    return '<tr data-seller="' + esc(o.seller) + '"><td class="n">' + (OFF.page * 10 + i + 1) + '</td>' +
+      '<td><span class="tb ' + (y === 'WFS?' ? 'WFSq' : y === '–' ? 'na' : y) + '">' + esc(y) + '</span><span class="sn">' + esc(o.seller) + '</span></td>' +
+      '<td>–' + (mu ? '<span class="sub"><a href="' + esc(mu) + '" target="_blank" rel="noopener">check</a></span>' : '') + '</td>' +
+      '<td><span class="pr">' + usd(o.price) + '</span>' + (o.ship ? '<span class="sub">+' + usd(o.ship) + ' ship</span>' : '') +
+        '<span class="sub">' + (o.store_only ? 'in store' : esc(shortDate(o.delivery))) + '</span></td>' +
+      '<td class="' + pc + '">' + (o.store_only ? '<span class="sub">store</span>' : k.profit != null ? usd(k.profit) : '<span class="sub">add cost</span>') + '</td>' +
+      '<td class="' + pc + '">' + (k.roi != null ? pct(k.roi) : '–') + '</td></tr>';
+  }).join('');
+  var cnt = function (f) { return all.filter(f).length; };
+  var nW = cnt(function (o) { var y = offType(o); return y === 'WFS' || y === 'WFS?'; }), nS = cnt(function (o) { return offType(o) === 'SF'; }), nM = cnt(function (o) { return o.walmart; });
+  el.innerHTML = '<table class="og"><colgroup><col style="width:8%"><col style="width:27%"><col style="width:13%"><col style="width:20%"><col style="width:17%"><col style="width:15%"></colgroup>' +
+    '<tr><th>#</th><th>Type</th><th>Stock</th><th>Price</th><th>Profit</th><th>ROI</th></tr>' + (rows || '<tr><td colspan="6" class="n">No WFS offers</td></tr>') + '</table>' +
+    (pages > 1 ? '<div class="opg"><button id="oPrev"' + (OFF.page ? '' : ' disabled') + '>‹</button>Page ' + (OFF.page + 1) + ' of ' + pages + '<button id="oNext"' + (OFF.page < pages - 1 ? '' : ' disabled') + '>›</button></div>' : '') +
+    '<div class="ofoot">Total: ' + all.length + ' <span class="tb WFS">WFS: ' + nW + '</span><span class="tb SF">SF: ' + nS + '</span>' + (nM ? '<span class="tb WM">WM</span>' : '') + '</div>';
+  if ($('oPrev')) $('oPrev').onclick = function () { OFF.page--; drawOffers(); };
+  if ($('oNext')) $('oNext').onclick = function () { OFF.page++; drawOffers(); };
+  el.querySelectorAll('tr[data-seller]').forEach(function (r) { r.onclick = function (e) { if (e.target.tagName !== 'A') toast(r.dataset.seller); }; });
+  document.querySelectorAll('#oTog button').forEach(function (b) { b.classList.toggle('on', b.dataset.f === OFF.f); b.onclick = function () { OFF.f = b.dataset.f; OFF.page = 0; drawOffers(); }; });
+}
+// ---------------------------------------------------------- brand: tap = my history with it
+function brandBox(c) {
+  var el = $('brandBox'), b = (c.brand || {}).name || (c.product || {}).brand; if (!el || !b) return;
+  if (el.innerHTML) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="brandbox">Loading your history with ' + esc(b) + '…</div>';
+  call('brand', {brand: b}).then(function (r) {
+    var ap = r.approval ? (r.approval.status === 'OK' ? '<b style="color:var(--good)">OK</b>' : '<b style="color:var(--warn)">' + esc(r.approval.status) + '</b>') + ' <span class="m">(' + esc(r.approval.date) + ')</span>'
+      : (c.approval || {}).status === 'ok' ? '<b style="color:var(--good)">OK</b> <span class="m">(' + esc(c.approval.why) + ')</span>' : '<span class="m">not recorded - check the Seller app</span>';
+    var bi = c.brand || {};
+    el.innerHTML = '<div class="brandbox"><b>' + esc(b) + '</b> on your account' +
+      '<div class="m">Approval: ' + ap + '</div>' +
+      '<div class="m">Source: ' + esc(bi.source || 'Unknown') + (bi.source_why ? ' (' + esc(bi.source_why) + ')' : '') + (bi.invoice ? ' · invoice recommended' : '') + '</div>' +
+      '<div style="font-weight:700;margin-top:4px">Will Buys: ' + r.will.length + '</div>' +
+      r.will.slice(0, 8).map(function (x) { return '<div class="bl"><span>' + esc(x.title) + '</span><span class="m">' + esc(x.date) + (x.cost ? ' · ' + usd(+x.cost) : '') + '</span></div>'; }).join('') +
+      '<div style="font-weight:700;margin-top:4px">Past scans: ' + r.scans.length + '</div>' +
+      r.scans.slice(0, 10).map(function (x) { return '<div class="bl" data-upc="' + esc(x.upc) + '" style="cursor:pointer"><span>' + esc(x.title) + '</span><span class="m">' + esc(x.when) + (x.verdict ? ' · ' + esc(x.verdict) : '') + '</span></div>'; }).join('') + '</div>';
+    el.querySelectorAll('[data-upc]').forEach(function (d) { d.onclick = function () { if (d.dataset.upc) { $('q').value = d.dataset.upc; scan({upc: d.dataset.upc}); } }; });
+  }).catch(function (e) { el.innerHTML = '<div class="brandbox err">' + esc(e.message || e) + '</div>'; });
 }
 function refreshKeep(nAl, focusId) {      // re-draw without losing the cursor in the box being typed in
   var el = $(focusId), pos = el && el.selectionStart, raw = el ? el.value : ''; refresh(nAl);
@@ -479,6 +592,7 @@ function wireCard(c, nAl) {
   document.querySelectorAll('[data-copy]').forEach(function (el) { el.onclick = function () { var v = el.dataset.copy;
     copy(v); }; });
   $('bSell').onclick = function () { sellPanel(c); };
+  if ($('bBrand')) $('bBrand').onclick = function () { brandBox(c); };
   var msp = document.querySelector('[data-a="msp"]'); if (msp) msp.onclick = function () { show('vSet'); loadSet(); toast('Add the MultiSellerPro link in Settings'); };
   document.querySelectorAll('#mSeg button').forEach(function (b) { b.onclick = function () { ST.method = b.dataset.m; refresh(nAl); }; });
   $('cCost').oninput = function () { ST.cost = money(this.value); $('tCost').value = this.value; refresh(nAl); };
