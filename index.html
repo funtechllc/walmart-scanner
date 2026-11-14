@@ -298,7 +298,7 @@ function alertsOf(c) {
   var p = c.product || {}, w = c.walmart || {}, a = c.amazon || {}, s = c.sellers || {}, t = (p.title || '') + ' ' + (w.category || ''), out = [];
   var b = function (l) { return (c.badges || []).some(function (x) { return x.label === l; }); };
   var bnote = function (l) { var x = (c.badges || []).filter(function (x) { return x.label === l; })[0]; return x ? x.note : ''; };
-  out.push(['Walmart sells it', s.checked ? (s.walmart_sells ? ['red', 'Yes'] : ['green', 'No']) : w.found ? (w.sells ? ['red', 'Yes'] : ['grey', 'Unknown']) : ['grey', 'Unknown']]);
+  out.push(['Walmart sells it', s.checked ? (s.walmart_sells ? ['red', 'Yes'] : ['green', 'No']) : w.found ? (w.sells ? ['red', 'Yes'] : ['grey', 'Unknown']) : ['grey', 'Unknown']]);   // same rule as wmSells()
   var bb = s.bb_price || w.price, ap = a.price;
   out.push(['Buy Box suppressed', bb && ap ? (bb > ap * 1.3 ? ['yellow', 'Likely (Walmart far above Amazon)'] : ['green', 'No']) : ['grey', 'Unknown']]);
   var n = Math.max(s.my_offer ? s.others : (s.count || 0), a.sellers || 0);
@@ -393,7 +393,7 @@ function refresh(nAl) {
   var lbl = ST.method === 'wfs' ? 'WFS' : 'Seller Fulfilled', min = CFG.min_max_buy;
   var V;
   if (!ST.price) V = {ok: false, big: 'SKIP: no sell price', small: 'Nothing to sell against on Walmart yet.'};
-  else if (s.walmart_sells || (c.walmart || {}).sells) V = {ok: false, big: 'SKIP: Walmart sells it', small: 'Max cost ' + usd(k.maxCost) + ' (' + lbl + ')'};
+  else if (wmSells(c)) V = {ok: false, big: 'SKIP: Walmart sells it', small: 'Max cost ' + usd(k.maxCost) + ' (' + lbl + ')'};
   else if ((c.badges || []).some(function (b) { return b.label === 'Risky category: skip'; })) V = {ok: false, big: 'SKIP: risky category', small: 'Max cost ' + usd(k.maxCost)};
   else if (ST.cost) V = ST.cost <= k.maxCost ? {ok: true, big: 'BUY under ' + usd(k.maxCost), small: 'Your cost ' + usd(ST.cost) + ' → profit ' + usd(k.profit) + ' (' + pct(k.roi) + ' ROI, ' + lbl + ')'}
                                          : {ok: false, big: 'SKIP: max cost ' + usd(k.maxCost), small: 'Your cost ' + usd(ST.cost) + ' is above it (' + lbl + ')'};
@@ -452,18 +452,24 @@ function refresh(nAl) {
   }).join('');
   drawStores();
   var tc = $('tCost'), tp = $('tPrice');
-  tc.oninput = function () { ST.cost = parseFloat(tc.value) || null; $('cCost').value = tc.value; refreshKeep(nAl, 'tCost'); };
-  tp.oninput = function () { ST.price = parseFloat(tp.value) || null; $('cPrice').value = tp.value; refreshKeep(nAl, 'tPrice'); };
+  tc.oninput = function () { ST.cost = money(tc.value); $('cCost').value = tc.value; refreshKeep(nAl, 'tCost'); };
+  tp.oninput = function () { ST.price = money(tp.value); $('cPrice').value = tp.value; refreshKeep(nAl, 'tPrice'); };
   tc.onchange = saveCost;
 }
 function refreshKeep(nAl, focusId) {      // re-draw without losing the cursor in the box being typed in
-  var el = $(focusId), pos = el && el.selectionStart; refresh(nAl);
-  var n = $(focusId); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} }
+  var el = $(focusId), pos = el && el.selectionStart, raw = el ? el.value : ''; refresh(nAl);
+  var n = $(focusId); if (n) { n.value = raw; n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} }
 }
 function saveCost() {
   if (!(ST.cost > 0) || !CARD.product.upc) return;
   call('cost', {upc: CARD.product.upc, cost: ST.cost, store: $('cStore').value, title: CARD.product.title}).then(function (sv) { CARD.saved = sv; toast('Cost saved for this UPC'); }).catch(fail);
 }
+// One rule for "Walmart sells it" (verdict + alert): the live seller list when checked, else Walmart's catalog flag.
+function wmSells(c) { var s = c.sellers || {}; return s.checked ? !!s.walmart_sells : !!(c.walmart || {}).sells; }
+// Money boxes: "1.88" or "1,88" -> 1.88 (2 decimals); empty/0 -> null
+function money(v) { var n = parseFloat(String(v == null ? '' : v).replace(',', '.').replace(/[^\d.]/g, '')); return isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null; }
+// One UPC form: 0857597003262 (13 digits) = 857597003262 (12)
+function upc12(v) { var d = String(v || '').replace(/\D/g, ''); while (d.length > 12 && d[0] === '0') d = d.slice(1); return d; }
 function shortDate(iso) { var d = new Date(iso); return iso && !isNaN(d) ? d.toLocaleDateString('en-US', {month: 'short', day: 'numeric', timeZone: 'America/New_York'}) : '–'; }
 function arrives(iso) { var d = new Date(iso); return iso && !isNaN(d) ? 'Arrives ' + d.toLocaleDateString('en-US', {month: 'short', day: 'numeric', timeZone: 'America/New_York'}) : '–'; }
 function wireCard(c, nAl) {
@@ -473,10 +479,10 @@ function wireCard(c, nAl) {
   $('bSell').onclick = function () { sellPanel(c); };
   var msp = document.querySelector('[data-a="msp"]'); if (msp) msp.onclick = function () { show('vSet'); loadSet(); toast('Add the MultiSellerPro link in Settings'); };
   document.querySelectorAll('#mSeg button').forEach(function (b) { b.onclick = function () { ST.method = b.dataset.m; refresh(nAl); }; });
-  $('cCost').oninput = function () { ST.cost = parseFloat(this.value) || null; refresh(nAl); };
+  $('cCost').oninput = function () { ST.cost = money(this.value); $('tCost').value = this.value; refresh(nAl); };
   $('cCost').onchange = saveCost; $('cStore').onchange = saveCost;
-  $('cPrice').oninput = function () { ST.price = parseFloat(this.value) || null; refresh(nAl); };
-  $('cTax').oninput = function () { ST.tax = (parseFloat(this.value) || 0) / 100; refresh(nAl); };
+  $('cPrice').oninput = function () { ST.price = money(this.value); $('tPrice').value = this.value; refresh(nAl); };
+  $('cTax').oninput = function () { ST.tax = (money(this.value) || 0) / 100; refresh(nAl); };
   $('cQty').oninput = function () { refresh(nAl); };
   $('cMo').oninput = function () { ST.months = +this.value; $('moV').textContent = this.value; refresh(nAl); };
   var b = $('bAmz'); if (b) b.onclick = function () { busy('Loading Amazon…'); call('amazon', {q: c.q}).then(render).catch(fail); };
@@ -575,7 +581,7 @@ function listConfirm(c) {
     if (chk && pv.live) { go.disabled = true; chk.onchange = function () { go.disabled = !chk.checked; }; }
     go.onclick = function () {
       go.disabled = true; $('lStat').innerHTML = '<div class="note">Sending to Walmart…</div>';
-      call('list_create', {confirm: true, upc: pv.upc, sku: $('lSku').value.trim(), price: parseFloat($('lPrice').value), method: $('lMeth').value,
+      call('list_create', {confirm: true, upc: pv.upc, sku: $('lSku').value.trim(), price: money($('lPrice').value), method: $('lMeth').value,
         qty: $('lQty').value, wid: w.wid, title: p.title, weight_lb: p.weight_lb, listing_check: lc, checked: chk ? chk.checked : undefined})
         .then(function (r) { pollFeed(r.feedId, w.wid, 0); })
         .catch(function (e) { $('lStat').innerHTML = '<div class="err">' + esc(e.message || e) + '</div>'; go.disabled = false; });
@@ -720,7 +726,7 @@ function drawHist() {
   document.querySelectorAll('#vHist [data-star]').forEach(function (b) { b.onclick = function () {
     var x = rows[+b.dataset.star], on = !x.star;
     call('star', {card: {upc: x.upc, asin: x.asin, wid: x.wid, title: x.title}, on: on}).then(function () {
-      HIST.forEach(function (h) { if ((x.upc && h.upc === x.upc) || (x.asin && h.asin === x.asin) || (x.wid && h.wid === x.wid)) h.starred = on; });
+      HIST.forEach(function (h) { if ((x.upc && upc12(h.upc) === upc12(x.upc)) || (x.asin && h.asin === x.asin) || (x.wid && h.wid === x.wid)) h.starred = on; });
       toast(on ? 'Added to Will Buy' : 'Removed from Will Buy'); drawHist(); }).catch(fail); }; });
 }
 function loadSet() {
@@ -738,7 +744,7 @@ function loadSet() {
   document.querySelectorAll('#gM button').forEach(function (b) { b.onclick = function () { m = b.dataset.m; segs(); }; }); segs();
   wireSecs();
   $('gSave').onclick = function () {
-    var n = function (id) { var v = parseFloat($(id).value); return isNaN(v) ? null : v; };
+    var n = function (id) { var v = parseFloat(String($(id).value).replace(',', '.')); return isNaN(v) ? null : Math.round(v * 100) / 100; };
     call('settings_save', {values: {roi_default: n('gRoi') != null ? n('gRoi') / 100 : null, min_max_buy: n('gMin'), max_lb: n('gLb'), max_l: n('gL'), max_w: n('gW'), max_h: n('gH'),
       scanner_tax: n('gTax') != null ? n('gTax') / 100 : null, scanner_storage_months: n('gMo'), scanner_method: m, msp_pattern: $('gMsp').value.trim()}})
       .then(function (cfg) { CFG = cfg; toast('Settings saved'); if (CARD) render(CARD); }).catch(fail);
