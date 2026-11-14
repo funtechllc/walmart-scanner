@@ -41,7 +41,20 @@
 .tile.warn{background:var(--warn-bg)}.tile.warn .v{color:var(--warn)}
 .tile.wide{grid-column:span 2}.tile input{width:100%;font-family:inherit;font-weight:800;font-size:18px;border:1px solid var(--line);border-radius:8px;padding:4px 6px;background:var(--card);color:var(--fg);min-height:36px}
 .verdict{grid-column:1/-1;border-radius:10px;padding:10px 12px;color:#fff}.verdict.buy{background:#15803d}.verdict.skip{background:#b91c1c}
-.verdict .vb{font-size:22px;font-weight:800}.verdict .vs{font-size:13px;opacity:.95}
+.verdict.check{background:#b45309}
+.verdict .vb{font-size:22px;font-weight:800}.verdict .pl{display:inline-block;margin-top:4px;font-size:11.5px;background:rgba(255,255,255,.22);border-radius:6px;padding:1px 6px}
+.pbox{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.pbox>div{border-radius:10px;padding:8px 10px;color:#fff}
+.pbox .wm{background:var(--wm)}.pbox .az{background:#c45500}.pbox .k{font-size:11px;font-weight:800;letter-spacing:.04em;opacity:.9}
+.pbox .p{font-size:20px;font-weight:800;line-height:1.2}.pbox .s{font-size:12.5px;opacity:.95}
+.idl{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.idl .idc{min-height:28px;font-size:11.5px;padding:0 7px}
+.mine{margin-top:10px;border:2px solid var(--wm);border-radius:10px;padding:8px 10px;font-size:13.5px}.mine b.t{color:var(--wm);font-size:12px;letter-spacing:.04em}
+.fb{display:inline-block;font-size:10.5px;font-weight:800;border-radius:5px;padding:0 5px;margin-left:4px;vertical-align:1px}
+.fb.wfs{background:var(--wm);color:#fff}.fb.wfsq{background:#dbeafe;color:#1e40af}.fb.sf{background:var(--grey-bg);color:var(--fg);border:1px solid var(--line)}.fb.wm{background:#ffc220;color:#111}.fb.me{background:#16a34a;color:#fff}
+tr.wfs td{background:rgba(0,113,220,.08)}
+.wb{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}.wb:first-child{border-top:0}
+.wb .st{font-weight:700;min-width:92px}.wb .pr{margin-left:auto;font-weight:800;white-space:nowrap}.wb a{color:inherit;text-decoration:none}
+.sellp{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px}.copyrow{display:flex;gap:6px;align-items:center;padding:5px 0;border-top:1px solid var(--line);font-size:13px}.copyrow:first-child{border-top:0}
+.copyrow span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.verdict .vs{font-size:13px;opacity:.95}
 .alerts div{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
 .alerts div:first-child{border-top:0}.dot{width:11px;height:11px;border-radius:50%;flex:none}
 .dot.green{background:#16a34a}.dot.yellow{background:#eab308}.dot.red{background:#dc2626}.dot.grey{background:#9ca3af}
@@ -184,6 +197,7 @@ function cam(mode) {
 function validCode(d) { return WMR_DECODE.clean(d, '') || (d.length === 8 ? WMR_DECODE.upcEtoA(d) : null); }
 var MODE = 'scan';                 // 'quick' = Quick Scan: one line per item
 function go(code, info) {
+  LENS = null;
   var c = validCode(String(code || '').replace(/\D/g, ''));
   if (c && info && info.short) {         // short UPC-E barcode: easy to misread, so check before spending a search
     show('vScan'); $('hello').style.display = 'none';
@@ -206,7 +220,7 @@ function scan(q, force) {
 $('q').onkeydown = function (e) {
   if (e.key !== 'Enter') return;
   var v = this.value.trim(); if (!v) return;
-  this.blur();
+  this.blur(); LENS = null;
   if (/^\d{8}$|^\d{12,13}$/.test(v.replace(/\s/g, ''))) go(v);
   else if (/^B0[A-Z0-9]{8}$/i.test(v)) scan({asin: v.toUpperCase()});
   else scan({name: v});
@@ -237,7 +251,9 @@ $('fBar').onchange = async function () {
 // ---------------------------------------------------------- Photo search (Google Lens) - only on a tap
 $('bLens').onclick = function () { $('fLens').click(); };
 $('fLens').onchange = function () { var f = this.files[0]; this.value = ''; if (f) lens(f); };
+var LENS = null, LENSPICK = null;        // the last Photo search matches (their stores feed WHERE TO BUY)
 function lens(f) {
+  $('q').value = ''; LENS = null;
   busy('Identifying the product (1 SerpApi search)…');
   shrink(f, 1000).then(function (data) { return call('photo', {image: data}); }).then(function (r) {
     var ms = r.matches || [];
@@ -246,7 +262,8 @@ function lens(f) {
       ms.map(function (m, i) { return '<div class="match" data-i="' + i + '">' + (m.thumb ? '<img src="' + esc(m.thumb) + '" alt="">' : '') + '<div><div style="font-size:14px;font-weight:600">' + esc(m.title) +
         '</div><div class="m">' + esc(m.source) + (m.price ? ' · ' + usd(m.price) : '') + (m.wid ? ' · Walmart item' : m.asin ? ' · Amazon item' : '') + '</div></div></div>'; }).join(''));
     wireSecs();
-    document.querySelectorAll('.match').forEach(function (el) { el.onclick = function () { var m = ms[+el.dataset.i]; scan(m.wid ? {wid: m.wid} : m.asin ? {asin: m.asin} : {name: m.title}); }; });
+    LENS = ms;
+    document.querySelectorAll('.match').forEach(function (el) { el.onclick = function () { var m = ms[+el.dataset.i]; LENSPICK = ms; scan(m.wid ? {wid: m.wid} : m.asin ? {asin: m.asin} : {name: m.title}); }; });
   }).catch(fail);
 }
 function shrink(file, max) {
@@ -259,7 +276,7 @@ function shrink(file, max) {
 }
 
 // ---------------------------------------------------------- collapsible sections (remembered per phone)
-var OPEN = lsGet('wmr_open', {product: 1, quick: 1, alerts: 1, calc: 1, offers: 1, details: 0, charts: 0});
+var OPEN = lsGet('wmr_open', {product: 1, quick: 1, alerts: 1, calc: 1, offers: 1, where: 0, details: 0, charts: 0});
 function sec(id, title, body, right) {
   var open = OPEN[id] !== 0 && OPEN[id] !== false;
   return '<div class="sec' + (open ? '' : ' closed') + '" data-s="' + id + '"><div class="sh"><span>' + title + '</span><span>' + (right || '') + ' <span class="ch">▾</span></span></div><div class="sb">' + body + '</div></div>';
@@ -267,7 +284,8 @@ function sec(id, title, body, right) {
 function wireSecs() {
   document.querySelectorAll('.sec .sh').forEach(function (h) {
     h.onclick = function () { var s = h.parentNode; s.classList.toggle('closed'); OPEN[s.dataset.s] = s.classList.contains('closed') ? 0 : 1; lsSet('wmr_open', OPEN);
-      if (s.dataset.s === 'charts' && OPEN.charts && CARD && !CARD._charts) loadCharts(); };
+      if (s.dataset.s === 'charts' && OPEN.charts && CARD && !CARD._charts) loadCharts();
+      if (s.dataset.s === 'where' && OPEN.where && CARD && !CARD._stores) loadStores(false); };
   });
 }
 
@@ -283,9 +301,11 @@ function alertsOf(c) {
   out.push(['Walmart sells it', s.checked ? (s.walmart_sells ? ['red', 'Yes'] : ['green', 'No']) : w.found ? (w.sells ? ['red', 'Yes'] : ['grey', 'Unknown']) : ['grey', 'Unknown']]);
   var bb = s.bb_price || w.price, ap = a.price;
   out.push(['Buy Box suppressed', bb && ap ? (bb > ap * 1.3 ? ['yellow', 'Likely (Walmart far above Amazon)'] : ['green', 'No']) : ['grey', 'Unknown']]);
-  var n = Math.max(s.count || 0, a.sellers || 0);
+  var n = Math.max(s.my_offer ? s.others : (s.count || 0), a.sellers || 0);
   out.push(['Private label', GENERIC.test(String(p.brand || '').trim()) || !p.brand ? ['red', 'Generic brand'] : n >= 3 ? ['green', 'No'] : ['grey', 'Unknown']]);
-  out.push(['Approval needed', b('Approval may be needed') ? ['yellow', bnote('Approval may be needed') || 'May be needed'] : ['green', 'No']]);
+  var ap = c.approval || {};
+  out.push(['Approval needed', ap.status === 'ok' ? ['green', 'No (' + ap.why + ')'] : ap.status === 'needs' ? ['yellow', 'Yes - ' + ap.why] :
+    ['yellow', ap.likely ? 'Likely - check Seller app' : 'Check Seller app']]);
   out.push(['Hazmat', HAZ.test(t) ? ['red', 'Possible (' + t.match(HAZ)[0] + ')'] : ['green', 'No']]);
   var summer = [4, 5, 6, 7, 8].indexOf(new Date().getMonth()) >= 0;
   out.push(['Heat-sensitive', HEAT.test(t) ? [summer ? 'red' : 'yellow', summer ? 'Yes - summer now' : 'Yes (summer risk)'] : ['green', 'No']]);
@@ -313,13 +333,25 @@ function render(c) {
   var sUrl = 'https://sas.selleramp.com/sas/lookup?SasLookup%5Bsearch_term%5D=' + encodeURIComponent(a.asin || p.upc || '');
   var mUrl = CFG.msp ? CFG.msp.replace('{wid}', encodeURIComponent(w.wid || '')).replace('{upc}', encodeURIComponent(p.upc || '')).replace('{asin}', encodeURIComponent(a.asin || '')) : '';
   var icon = function (href, ic, l) { return href ? '<a target="_blank" rel="noopener" href="' + esc(href) + '"><span class="ic">' + ic + '</span>' + l + '</a>' : '<button data-a="msp"><span class="ic">' + ic + '</span>' + l + '</button>'; };
+  var nOthers = s.checked ? (s.my_offer ? s.others : s.count) : null;
+  var wBox = '<div class="wm"><div class="k">WALMART</div><div class="p">' + (w.found || s.bb_price ? usd(s.bb_price || w.price) : 'Not listed') + '</div><div class="s">' +
+    (s.checked ? num(nOthers) + ' seller' + (nOthers === 1 ? '' : 's') + (s.my_offer ? ' + you' : '') : w.found ? 'sellers not checked' : 'first to sell?') + (s.store_price_note ? ' · store price' : '') + '</div></div>';
+  var aBox = '<div class="az"><div class="k">AMAZON</div><div class="p">' + (a.found === false ? 'Not found' : a.loaded === false ? '–' : usd(a.price)) + '</div><div class="s">' +
+    (a.sold ? num(a.sold) + '/mo sold' : a.loaded === false ? 'not loaded' : 'sales unknown') + '</div></div>';
+  var mi = c.mine || {};
+  var mineBox = mi.mine ? '<div class="mine"><b class="t">IN YOUR CATALOG</b> · <b>' + esc(mi.status) + '</b><br>SKU ' + esc(mi.sku) + ' · your price ' + usd(mi.price) +
+    ' · stock ' + (mi.stock_wfs != null ? num(mi.stock_wfs) + ' WFS' + (mi.stock_self ? ' + ' + num(mi.stock_self) + ' SF' : '') : num(mi.stock_self != null ? mi.stock_self : mi.stock)) +
+    (s.my_offer || mi.bb_winning != null ? '<br>Buy Box: ' + (mi.bb_winning === true ? '<b style="color:var(--good)">you win it</b>' : mi.bb_winning === false ? '<b style="color:var(--bad)">not yours</b> (Buy Box ' + usd(mi.bb_price) + ')' : 'not in the report yet') +
+      (mi.bb_report ? ' <span class="m">· Walmart report ' + esc(mi.bb_report) + '</span>' : '') : '') + '</div>' : '';
+  var chip = function (l, v) { return v ? '<span class="idc" data-copy="' + esc(v) + '">' + l + ' ' + esc(v) + '</span>' : ''; };
   var product = '<div class="prod">' + (p.image ? '<img src="' + esc(p.image) + '" alt="">' : '') + '<div><div class="pt">' + esc(p.title || 'Unknown product') + '</div>' +
     '<div class="m">' + esc(p.brand || '–') + (cat ? ' · ' + esc(cat) : '') + ' · ' + esc(p.pack) + '</div><div class="m">' + rating + '</div>' +
-    '<div class="ids">' + (p.upc ? '<span class="idc" data-copy="' + esc(p.upc) + '">UPC ' + esc(p.upc) + '</span>' : '') + (a.asin ? '<span class="idc" data-copy="' + esc(a.asin) + '">ASIN ' + esc(a.asin) + '</span>' : '') +
-    (w.wid ? '<span class="idc" data-copy="' + esc(w.wid) + '">WM ' + esc(w.wid) + '</span>' : '') + '</div>' + (c.cached ? '<div class="m">Saved scan (under 24 h)</div>' : '') + '</div></div>' +
+    (c.cached ? '<div class="m">Saved scan (under 24 h)</div>' : '') + '</div></div>' +
+    '<div class="pbox">' + wBox + aBox + '</div>' +
+    '<div class="idl">' + chip('UPC', p.upc) + chip('ASIN', a.asin) + chip('WM', w.wid) + '</div>' + mineBox +
     '<div class="icons">' + icon(wUrl, '🛒', 'Walmart') + icon(aUrl, '📦', 'Amazon') + icon(gUrl, 'G', 'Google') + icon(sUrl, '📈', 'SellerAmp') + icon(mUrl, '👥', 'MultiSeller') + '</div>';
   var quick = '<div class="tiles" id="tiles"></div><div class="row"><button class="btn" id="bSkip">Skip</button><button class="btn pri" id="bWill" style="flex:1">★ Will Buy</button>' +
-    '<button class="btn" disabled title="Stage 6">Sell on WMT</button></div><div id="frm"></div>';
+    '<button class="btn" id="bSell">Sell on WMT</button></div><div id="frm"></div>';
   var alerts = '<div class="alerts">' + al.map(function (x) { return '<div><span class="dot ' + x[1][0] + '"></span>' + esc(x[0]) + '<span class="st">' + esc(x[1][1]) + '</span></div>'; }).join('') + '</div>';
   var opts = STORES.map(function (x) { return '<option' + (c.saved && c.saved.store === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('');
   var calcH = '<div class="seg" id="mSeg"><button data-m="wfs">WFS</button><button data-m="self">Seller Fulfilled</button></div>' +
@@ -330,8 +362,10 @@ function render(c) {
     '<div><div class="lab">Sales tax %</div><input class="in" id="cTax" inputmode="decimal" value="' + r2(ST.tax * 100) + '"></div>' +
     '<div><div class="lab">Storage months: <b id="moV">' + ST.months + '</b></div><input type="range" id="cMo" min="0" max="12" step="1" value="' + ST.months + '"></div></div>' +
     '<div class="fees" id="fees" style="margin-top:8px"></div>' + (c.saved ? '<div class="note">Cost saved ' + esc(c.saved.date) + (c.saved.store ? ' · ' + esc(c.saved.store) : '') + '</div>' : '');
-  var offers = (s.offers || []).length ? '<table><tr><th>Seller</th><th>Ship</th><th class="r">Price</th><th>Arrives</th><th class="r">If matched</th></tr><tbody id="offRows"></tbody></table>' +
-    '<div class="note">Total: ' + num(s.count) + ' seller' + (s.count === 1 ? '' : 's') + ' in stock · Stock: check MultiSellerPro · WFS / Seller Fulfilled per seller is not in the data yet.</div>'
+  var offers = (s.offers || []).length ? '<table><tr><th>Seller</th><th class="r">Price</th><th>Arrives</th><th>Stock</th><th class="r">If matched</th></tr><tbody id="offRows"></tbody></table>' +
+    '<div class="note">' + num(s.count) + ' seller' + (s.count === 1 ? '' : 's') + ' in stock' + (s.my_offer ? ' (incl. you)' : '') +
+    '. Badges: WFS? = free and arrives within 2 business days (likely WFS), SF = paid shipping (Seller Fulfilled for sure), – = unknown. Walmart\'s data has no confirmed WFS flag per seller. Stock: MultiSellerPro for now (Stage 9 extension later).</div>' +
+    (s.store_price_note ? '<div class="note">' + esc(s.store_price_note) + ' (Walmart.com lists it like this online too). Sale price uses the lowest other seller.</div>' : '')
     : '<div class="note">' + esc(s.checked ? 'No sellers in stock.' : (s.why || 'Sellers not checked')) + '</div>';
   var details = '<div style="color:var(--wm);font-weight:700;font-size:13px">WALMART</div><div class="m" style="color:var(--fg)">' +
     (w.found ? (s.bb_price ? 'Buy Box ' + usd(s.bb_price) + ' · ' + esc(s.bb_seller) : 'Price ' + usd(w.price)) + ' · sell price basis: ' + esc((c.sell || {}).basis || '–') +
@@ -346,9 +380,13 @@ function render(c) {
   var charts = '<div id="charts"><div class="note">Charts load only when this section is open (Amazon from Keepa, ~2 tokens; Walmart from your own saved lookups, free).</div></div>';
   var starBtn = '<button class="star' + (c.starred ? ' on' : '') + '" id="bStar" aria-label="Will Buy star" title="Star = Will Buy">' + (c.starred ? '★' : '☆') + '</button>';
   $('out').innerHTML = sec('product', 'PRODUCT DETAILS', product, starBtn) + sec('quick', 'QUICK INFO', quick) + sec('alerts', 'ALERTS', alerts, nAl ? '<b style="color:var(--bad)">' + nAl + '</b>' : '') +
-    sec('calc', 'PROFIT CALCULATOR', calcH) + sec('offers', 'OFFERS', offers, s.count != null ? num(s.count) : '') + sec('details', 'WALMART & AMAZON DETAILS', details) + sec('charts', 'CHARTS', charts);
+    sec('calc', 'PROFIT CALCULATOR', calcH) + sec('offers', 'OFFERS', offers, s.count != null ? num(s.count) : '') +
+    sec('where', 'WHERE TO BUY', '<div id="where"></div>') + sec('details', 'WALMART & AMAZON DETAILS', details) + sec('charts', 'CHARTS', charts);
+  if (c.upc) $('q').value = c.upc;
+  if (LENSPICK) { c._lensStores = lensStores(LENSPICK); LENSPICK = null; }
   wireSecs(); wireCard(c, nAl);
   if (OPEN.charts) loadCharts();
+  drawStores();
 }
 function refresh(nAl) {
   var c = CARD, s = c.sellers || {}, a = c.amazon || {}, k = calc(ST), other = calc(Object.assign({}, ST, {method: ST.method === 'wfs' ? 'self' : 'wfs'}));
@@ -361,15 +399,35 @@ function refresh(nAl) {
                                          : {ok: false, big: 'SKIP: max cost ' + usd(k.maxCost), small: 'Your cost ' + usd(ST.cost) + ' is above it (' + lbl + ')'};
   else V = k.maxCost < min ? {ok: false, big: 'SKIP: max cost ' + usd(k.maxCost), small: 'Under your Min max-buy ' + usd(min) + ' (' + lbl + ')'}
                            : {ok: true, big: 'BUY under ' + usd(k.maxCost), small: lbl + ' · enter your cost to check it'};
+  // Buy Box likely suppressed (Walmart far above Amazon, my own offer not counted): judge again at Amazon's price
+  var bbOthers = ((s.offers || []).filter(function (o) { return !o.me; })[0] || {}).total || ST.price;
+  if (V.ok && bbOthers && a.price && bbOthers > a.price * 1.3) {
+    var real = calc(Object.assign({}, ST, {price: a.price}));
+    if (!(ST.cost && ST.cost <= real.maxCost))
+      V = {ok: false, check: true, big: 'CHECK: Buy Box likely suppressed', small: 'At Amazon\'s ' + usd(a.price) + ' max cost is ' + usd(real.maxCost) + ' (' + lbl + ')'};
+    else V.small += ' · still clears at Amazon\'s ' + usd(a.price);
+  }
+  var ap = c.approval || {};
+  if (V.ok && ap.status !== 'ok')
+    V = {ok: false, check: true, big: ap.status === 'needs' ? 'CHECK: approval needed' : 'CHECK: approval', small: V.big + ' once the Seller app says you can sell ' + ((c.product || {}).brand || 'it')};
+  var plUnknown = alertsOf(c).some(function (x) { return x[0] === 'Private label' && x[1][1] === 'Unknown'; });
+  var nO = s.my_offer ? s.others : s.count;
   var t = function (l, v, cls, wide) { return '<div class="tile ' + (cls || '') + (wide ? ' wide' : '') + '"><div class="l">' + l + '</div><div class="v">' + v + '</div></div>'; };
   var g = function (v, okIf) { return v == null ? '' : okIf ? 'good' : 'bad'; };
-  $('tiles').innerHTML = '<div class="verdict ' + (V.ok ? 'buy' : 'skip') + '"><div class="vb">' + esc(V.big) + '</div><div class="vs">' + esc(V.small) + '</div></div>' +
+  var apT = ap.status === 'ok' ? t('Approval', 'Not needed', 'good') : '<div class="tile warn"><div class="l">Approval</div><div class="v" style="font-size:14px">' + (ap.status === 'needs' ? 'Needed' : 'Check Seller app') +
+    '</div>' + ((c.product || {}).brand ? '<div style="display:flex;gap:4px;margin-top:4px"><button class="btn" data-ap="ok" style="min-height:30px;padding:0 6px;font-size:12px">OK</button><button class="btn" data-ap="needs" style="min-height:30px;padding:0 6px;font-size:12px">Needs</button></div>' : '') + '</div>';
+  $('tiles').innerHTML = '<div class="verdict ' + (V.ok ? 'buy' : V.check ? 'check' : 'skip') + '"><div class="vb">' + esc(V.big) + '</div><div class="vs">' + esc(V.small) + '</div>' +
+    (plUnknown ? '<span class="pl">Private label: unknown</span>' : '') + '</div>' + apT +
     t('Alerts', nAl, nAl ? 'warn' : 'good') + t('Amazon sales/mo', num(a.sold), a.sold >= 300 ? 'good' : a.sold ? 'warn' : '') +
-    t('Walmart sellers', s.checked ? num(s.count) : '–', s.checked ? (s.count <= 5 ? 'good' : s.count <= 12 ? 'warn' : 'bad') : '') +
+    t('Walmart sellers', s.checked ? num(nO) + (s.my_offer ? ' + you' : '') : '–', s.checked ? (nO <= 5 ? 'good' : nO <= 12 ? 'warn' : 'bad') : '') +
     t('Max cost', usd(k.maxCost), k.maxCost != null ? (k.maxCost >= min ? 'good' : 'bad') : '') +
     '<div class="tile ' + (ST.cost ? (ST.cost <= k.maxCost ? 'good' : 'bad') : 'warn') + '"><div class="l">Cost price</div><input id="tCost" inputmode="decimal" value="' + (ST.cost || '') + '" placeholder="$"></div>' +
     '<div class="tile"><div class="l">Sale price</div><input id="tPrice" inputmode="decimal" value="' + (ST.price || '') + '"></div>' +
-    t('Profit', usd(k.profit), g(k.profit, k.profit > 0)) + t('ROI', pct(k.roi), k.roi == null ? '' : k.roi >= CFG.roi ? 'good' : k.roi > 0 ? 'warn' : 'bad') + t('Breakeven', usd(k.breakeven), '');
+    t('Profit', usd(k.profit), g(k.profit, k.profit > 0)) + t('ROI', pct(k.roi), k.roi == null ? '' : k.roi >= CFG.roi ? 'good' : k.roi > 0 ? 'warn' : 'bad');
+  document.querySelectorAll('[data-ap]').forEach(function (b) { b.onclick = function () {
+    call('approval', {brand: (c.product || {}).brand, upc: (c.product || {}).upc, status: b.dataset.ap}).then(function (r) {
+      c.approval = r.status === 'ok' ? {status: 'ok', why: 'Seller app said OK (today)'} : {status: 'needs', why: 'Seller app: selling requires approval (today)'};
+      toast('Saved for ' + (c.product || {}).brand); render(c); }).catch(fail); }; });
   var q = Math.max(1, parseInt($('cQty').value, 10) || 1);
   $('fees').innerHTML = '<div><span>Sale price</span><span>' + usd(ST.price) + '</span></div>' +
     '<div><span>Referral fee (' + Math.round(k.ref * 100) + '%)</span><span>-' + usd(k.refAmt) + '</span></div>' +
@@ -377,16 +435,22 @@ function refresh(nAl) {
     (ST.method === 'wfs' ? '<div><span>Storage (' + ST.months + ' mo' + (k.storageKnown ? '' : ', size unknown') + ')</span><span>-' + usd(k.storage) + '</span></div>' : '') +
     '<div class="tot"><span>Estimated payout / unit</span><span>' + usd(k.payout) + '</span></div>' +
     '<div><span>Cost with ' + r2(ST.tax * 100) + '% tax</span><span>-' + usd(k.landed) + '</span></div>' +
-    '<div class="tot"><span>Profit / unit · ROI</span><span>' + usd(k.profit) + ' · ' + pct(k.roi) + '</span></div>' +
+    '<div><span>Breakeven sale price</span><span>' + usd(k.breakeven) + '</span></div>' + '<div class="tot"><span>Profit / unit · ROI</span><span>' + usd(k.profit) + ' · ' + pct(k.roi) + '</span></div>' +
     (q > 1 ? '<div class="tot"><span>× ' + q + ' units: buy ' + usd(k.landed != null ? k.landed * q : null) + '</span><span>profit ' + usd(k.profit != null ? k.profit * q : null) + '</span></div>' : '') +
     '<div class="note">Other method (' + (ST.method === 'wfs' ? 'Seller Fulfilled' : 'WFS') + '): max cost ' + usd(other.maxCost) + (other.profit != null ? ', profit ' + usd(other.profit) : '') + '</div>';
   document.querySelectorAll('#mSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.m === ST.method); });
   var rows = $('offRows');
+  var mspUrl = function () { var w = CARD.walmart || {}, p = CARD.product || {}; return CFG.msp ? CFG.msp.replace('{wid}', encodeURIComponent(w.wid || '')).replace('{upc}', encodeURIComponent(p.upc || '')).replace('{asin}', encodeURIComponent((CARD.amazon || {}).asin || '')) : ''; };
   if (rows) rows.innerHTML = ((CARD.sellers || {}).offers || []).map(function (o) {
     var kk = calc(Object.assign({}, ST, {price: o.total}));
-    return '<tr><td>' + esc(o.seller) + (o.walmart ? ' <b>(Walmart)</b>' : '') + '</td><td>–</td><td class="r">' + usd(o.price) + (o.ship ? '<div class="m">+' + usd(o.ship) + '</div>' : '<div class="m">free ship</div>') + '</td>' +
-      '<td>' + esc(arrives(o.delivery)) + '</td><td class="r">' + (kk.profit != null ? '<b style="color:' + (kk.profit > 0 ? 'var(--good)' : 'var(--bad)') + '">' + usd(kk.profit) + '</b><div class="m">' + pct(kk.roi) + '</div>' : '<span class="m">add cost</span>') + '</td></tr>';
+    var f = o.ful || '–', fb = o.me ? '<span class="fb me">YOU</span>' : o.walmart ? '<span class="fb wm">WALMART</span>' : f === 'WFS' ? '<span class="fb wfs">WFS</span>' : f === 'WFS?' ? '<span class="fb wfsq">WFS?</span>' : f === 'SF' ? '<span class="fb sf">SF</span>' : '<span class="m"> –</span>';
+    var mu = mspUrl();
+    return '<tr' + (f === 'WFS' || f === 'WFS?' ? ' class="wfs"' : '') + '><td>' + esc(o.seller) + fb + (o.store_price ? '<div class="m">store-style price</div>' : '') + '</td>' +
+      '<td class="r" style="white-space:nowrap">' + usd(o.price) + ' <span class="m">' + (o.ship ? '+' + usd(o.ship) : 'free ship') + '</span></td>' +
+      '<td style="white-space:nowrap">' + esc(shortDate(o.delivery)) + '</td><td>–' + (mu ? ' <a class="m" target="_blank" rel="noopener" href="' + esc(mu) + '">check</a>' : '') + '</td>' +
+      '<td class="r">' + (kk.profit != null ? '<b style="color:' + (kk.profit > 0 ? 'var(--good)' : 'var(--bad)') + '">' + usd(kk.profit) + '</b><div class="m">' + pct(kk.roi) + '</div>' : '<span class="m">add cost</span>') + '</td></tr>';
   }).join('');
+  drawStores();
   var tc = $('tCost'), tp = $('tPrice');
   tc.oninput = function () { ST.cost = parseFloat(tc.value) || null; $('cCost').value = tc.value; refreshKeep(nAl, 'tCost'); };
   tp.oninput = function () { ST.price = parseFloat(tp.value) || null; $('cPrice').value = tp.value; refreshKeep(nAl, 'tPrice'); };
@@ -400,11 +464,13 @@ function saveCost() {
   if (!(ST.cost > 0) || !CARD.product.upc) return;
   call('cost', {upc: CARD.product.upc, cost: ST.cost, store: $('cStore').value, title: CARD.product.title}).then(function (sv) { CARD.saved = sv; toast('Cost saved for this UPC'); }).catch(fail);
 }
+function shortDate(iso) { var d = new Date(iso); return iso && !isNaN(d) ? d.toLocaleDateString('en-US', {month: 'short', day: 'numeric', timeZone: 'America/New_York'}) : '–'; }
 function arrives(iso) { var d = new Date(iso); return iso && !isNaN(d) ? 'Arrives ' + d.toLocaleDateString('en-US', {month: 'short', day: 'numeric', timeZone: 'America/New_York'}) : '–'; }
 function wireCard(c, nAl) {
   refresh(nAl);
   document.querySelectorAll('[data-copy]').forEach(function (el) { el.onclick = function () { var v = el.dataset.copy;
-    (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function () { toast('Copied ' + v); }).catch(function () { prompt('Copy:', v); }); }; });
+    copy(v); }; });
+  $('bSell').onclick = function () { sellPanel(c); };
   var msp = document.querySelector('[data-a="msp"]'); if (msp) msp.onclick = function () { show('vSet'); loadSet(); toast('Add the MultiSellerPro link in Settings'); };
   document.querySelectorAll('#mSeg button').forEach(function (b) { b.onclick = function () { ST.method = b.dataset.m; refresh(nAl); }; });
   $('cCost').oninput = function () { ST.cost = parseFloat(this.value) || null; refresh(nAl); };
@@ -423,6 +489,108 @@ function wireCard(c, nAl) {
   };
   $('bWill').onclick = function () { setStar(c, true); };
   $('bStar').onclick = function (e) { e.stopPropagation(); setStar(c, !c.starred); };
+}
+function copy(v, msg) {
+  var done = function () { toast(msg || 'Copied ' + v); };
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(v).then(done).catch(function () { prompt('Copy:', v); });
+  prompt('Copy:', v); return Promise.resolve();
+}
+// ---------------------------------------------------------- WHERE TO BUY: every store, cheapest first, against my max cost
+function wordsOf(t) { return (String(t || '').toLowerCase().match(/[a-z0-9]+/g) || []).filter(function (x) { return x.length >= 3 && ['the', 'and', 'for', 'with', 'pack', 'count'].indexOf(x) < 0; }); }
+/** Lens also returns look-alike products: keep only the same brand and ~40% of the same title words. */
+function sameItem(card, other) {
+  var p = card.product || {}, o = {}; wordsOf(other).forEach(function (x) { o[x] = 1; });
+  var b = wordsOf(p.brand)[0]; if (b && !o[b]) return false;
+  var a = wordsOf(p.title).slice(0, 8); if (!a.length) return true;
+  return a.filter(function (x) { return o[x]; }).length / a.length >= 0.4;
+}
+function lensStores(ms) {
+  return {from: 'Photo search', offers: ms.filter(function (m) { return m.price && sameItem(CARD, m.title); }).map(function (m) {
+    return {store: m.source || 'Store', price: m.price, title: m.title, link: m.link, resale: /ebay|mercari|poshmark|facebook|offerup/i.test(m.source || '')}; })};
+}
+function loadStores(force) {
+  var c = CARD, p = c.product || {};
+  if (!p.upc && !p.title) return;
+  c._stores = 'loading'; drawStores();
+  call('stores', {upc: p.upc, title: p.title, brand: p.brand, force: !!force}).then(function (r) { if (CARD === c) { c._stores = r; drawStores(); } })
+    .catch(function (e) { c._stores = {error: String(e.message || e)}; drawStores(); });
+}
+function drawStores() {
+  var el = $('where'); if (!el || !CARD || !ST) return;
+  var c = CARD, mc = calc(ST).maxCost, st = c._stores, rows = [];
+  if (c._lensStores) rows = rows.concat(c._lensStores.offers.map(function (o) { o.from = 'photo'; return o; }));
+  if (st && st.offers) rows = rows.concat(st.offers);
+  var seen = {}; rows = rows.filter(function (o) { var k = o.store + '|' + o.price; if (seen[k]) return false; seen[k] = 1; return true; });
+  rows.sort(function (a, b) { return a.price - b.price; });
+  var line = function (o) {
+    var ok = mc != null && o.price <= mc;
+    return '<div class="wb"><span class="st">' + esc(o.store) + (o.resale ? ' <span class="fb sf">resale</span>' : '') + '</span><a class="m" href="' + esc(o.link || '#') + '" target="_blank" rel="noopener" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(o.title || 'open') + '</a>' +
+      '<span class="pr" style="color:' + (mc == null ? 'var(--fg)' : ok ? 'var(--good)' : 'var(--bad)') + '">' + usd(o.price) + '</span></div>';
+  };
+  var head = '<div class="note" style="margin-top:0">Cheapest first. Green = under your max cost ' + usd(mc) + ' (' + (ST.method === 'wfs' ? 'WFS' : 'Seller Fulfilled') + ').</div>';
+  var btn = st === 'loading' ? '<div class="note">Searching stores (1 SerpApi search)…</div>' :
+    '<div class="row"><button class="btn" id="bStores">' + (st && st.offers ? 'Search stores again (1 search)' : 'Find stores (1 search)') + '</button></div>';
+  el.innerHTML = head + (rows.length ? rows.map(line).join('') : '<div class="note">' + (st && st.error ? esc(st.error) : 'No stores yet.') + '</div>') + btn +
+    (st && st.offers ? '<div class="note">Google Shopping' + (st.cached ? ' (saved, under 24 h)' : '') + ' · searched “' + esc(st.query) + '” (a bare UPC search finds unrelated items) · same-item matches only.</div>' : '') +
+    (c._lensStores ? '<div class="note">Includes your Photo search results.</div>' : '');
+  var b = $('bStores'); if (b) b.onclick = function () { loadStores(!!(st && st.offers)); };
+}
+// ---------------------------------------------------------- SELL ON WMT: Quick Sell (copy UPC + open) or List via API (Confirm only)
+function isPhone() { return /iPhone|iPad|Android/i.test(navigator.userAgent); }
+function sellPanel(c) {
+  var p = c.product || {}, w = c.walmart || {};
+  $('frm').innerHTML = '<div class="sellp"><div class="row" style="margin-top:0"><button class="btn pri" id="bQuick" style="flex:1">⚡ Quick Sell</button><button class="btn" id="bApi" style="flex:1">List via API</button></div>' +
+    '<div class="note">Quick Sell copies the UPC and opens ' + (isPhone() ? 'Walmart Seller Center (the Seller app opens instead if your phone hands the link to it)' : 'Seller Center') + '. Walmart has no link that opens Add item with the UPC already filled in, so you paste it there.</div><div id="sellBody"></div></div>';
+  $('bQuick').onclick = function () {
+    copy(p.upc || '', 'UPC copied — paste it in Add item').then(function () { window.open('https://seller.walmart.com/', '_blank'); });
+  };
+  $('bApi').onclick = function () { w.wid ? listConfirm(c) : firstToSell(c); };
+}
+function firstToSell(c) {
+  var p = c.product || {}, a = c.amazon || {};
+  var rowsH = [['UPC', p.upc], ['Title', p.title], ['Brand', p.brand], ['Size (in)', p.dims], ['Weight (lb)', p.weight_lb], ['Picture', p.image], ['Amazon picture', a.image]]
+    .filter(function (r) { return r[1]; });
+  $('sellBody').innerHTML = '<div class="note"><b>No Walmart listing for this UPC</b> (you would be the first to sell). Set it up in Seller Center → Add items; copy from here:</div>' +
+    rowsH.map(function (r, i) { return '<div class="copyrow"><b style="min-width:84px">' + esc(r[0]) + '</b><span>' + esc(r[1]) + '</span><button class="btn" data-cp="' + i + '" style="min-height:34px">Copy</button></div>'; }).join('') +
+    '<div class="row"><button class="btn pri" id="bOpenSC" style="flex:1">Copy UPC + open Add items</button></div>';
+  document.querySelectorAll('[data-cp]').forEach(function (b) { b.onclick = function () { copy(String(rowsH[+b.dataset.cp][1]), 'Copied ' + rowsH[+b.dataset.cp][0]); }; });
+  $('bOpenSC').onclick = function () { copy(p.upc, 'UPC copied — paste it in Add items').then(function () { window.open('https://seller.walmart.com/', '_blank'); }); };
+}
+function listConfirm(c) {
+  var p = c.product || {}, w = c.walmart || {}, lc = (c.badges || []).some(function (b) { return b.label === 'Listing check'; });
+  $('sellBody').innerHTML = '<div class="note">Checking your catalog…</div>';
+  call('list_preview', {upc: p.upc}).then(function (pv) {
+    if (pv.existing) { $('sellBody').innerHTML = '<div class="note"><b>Already in your catalog</b>: SKU ' + esc(pv.existing.sku) + ' · ' + esc(pv.existing.status) + '. Change price or stock in Seller Center.</div>'; return; }
+    var price = ST.price || '';
+    $('sellBody').innerHTML = '<div class="grid2" style="margin-top:8px">' +
+      '<div><div class="lab">UPC</div><input class="in" value="' + esc(pv.upc) + '" disabled></div><div><div class="lab">SKU</div><input class="in" id="lSku" value="' + esc(pv.sku) + '"></div>' +
+      '<div><div class="lab">Your sale price $</div><input class="in" id="lPrice" inputmode="decimal" value="' + esc(price) + '"></div><div><div class="lab">Condition</div><input class="in" value="New" disabled></div>' +
+      '<div><div class="lab">Fulfillment</div><select class="in" id="lMeth"><option value="wfs"' + (ST.method === 'wfs' ? ' selected' : '') + '>WFS</option><option value="self"' + (ST.method === 'self' ? ' selected' : '') + '>Seller Fulfilled</option></select></div>' +
+      '<div><div class="lab">Quantity</div><input class="in" id="lQty" inputmode="numeric" value="' + esc($('cQty').value || 1) + '"></div></div>' +
+      (lc ? '<label class="row" style="font-size:14px"><input type="checkbox" id="lChk" style="width:22px;height:22px"> I checked the listing matches (brand, title, pack, pictures)</label>' : '') +
+      '<div class="note">Creates your offer on Walmart item ' + esc(w.wid) + ' (matched by UPC). WFS: after it is set up, send stock in with a WFS shipment in Seller Center. Seller Fulfilled: the quantity is set when Walmart finishes.</div>' +
+      (pv.live ? '' : '<div class="err">Listing through the API is switched off until the first test with your OK. Use Quick Sell for now.</div>') +
+      '<div class="row"><button class="btn pri" id="lGo" style="flex:1"' + (pv.live ? '' : ' disabled') + '>Confirm: create my offer</button></div><div id="lStat"></div>';
+    var chk = $('lChk'), go = $('lGo');
+    if (chk && pv.live) { go.disabled = true; chk.onchange = function () { go.disabled = !chk.checked; }; }
+    go.onclick = function () {
+      go.disabled = true; $('lStat').innerHTML = '<div class="note">Sending to Walmart…</div>';
+      call('list_create', {confirm: true, upc: pv.upc, sku: $('lSku').value.trim(), price: parseFloat($('lPrice').value), method: $('lMeth').value,
+        qty: $('lQty').value, wid: w.wid, title: p.title, weight_lb: p.weight_lb, listing_check: lc, checked: chk ? chk.checked : undefined})
+        .then(function (r) { pollFeed(r.feedId, w.wid, 0); })
+        .catch(function (e) { $('lStat').innerHTML = '<div class="err">' + esc(e.message || e) + '</div>'; go.disabled = false; });
+    };
+  }).catch(fail);
+}
+function pollFeed(feedId, wid, n) {
+  call('list_status', {feedId: feedId}).then(function (st) {
+    var done = st.item === 'SUCCESS' || st.errors.length || /PROCESSED|ERROR/.test(st.feed);
+    $('lStat').innerHTML = '<div class="note">Walmart feed ' + esc(feedId) + ': <b>' + esc(st.feed) + '</b>' + (st.item ? ' · item ' + esc(st.item) : '') + '</div>' +
+      (st.errors.length ? '<div class="err">' + esc(st.errors.join(' · ')) + '</div>' : '') + (st.qty_sent ? '<div class="note">Quantity ' + st.qty_sent + ' set.</div>' : '') +
+      (done ? '<div class="row"><a class="btn pri" style="flex:1;display:flex;align-items:center;justify-content:center;text-decoration:none" target="_blank" rel="noopener" href="https://seller.walmart.com/">Open Seller Center</a>' +
+              '<a class="btn" style="display:flex;align-items:center;text-decoration:none" target="_blank" rel="noopener" href="https://www.walmart.com/ip/' + esc(st.wid || wid) + '">Walmart page</a></div>' : '<div class="note">Checking again in 20 s…</div>');
+    if (!done && n < 30) setTimeout(function () { pollFeed(feedId, wid, n + 1); }, 20000);
+  }).catch(function (e) { $('lStat').innerHTML = '<div class="err">' + esc(e.message || e) + '</div>'; });
 }
 function setStar(c, on) {
   call('star', {card: slim(c), on: on, cost: ST ? ST.cost : null, store: $('cStore') ? $('cStore').value : ''}).then(function (r) {
