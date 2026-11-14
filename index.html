@@ -168,6 +168,11 @@ table.og{width:100%;table-layout:fixed;border:1px solid #cfd6df;border-collapse:
 .tile .apb{padding:0 3px 2px}.tile .apb button{min-height:18px;font-size:10px;line-height:1}.tile.warn .v.sm{font-size:11px;padding:1px 2px 1px}
 .sec{margin-top:4px}.sb{padding:4px 6px}
 .g3{grid-template-columns:repeat(3,1fr)}.g3 .in{min-height:32px;padding:0 6px}.g3>div:last-child{grid-column:span 2}.seg button{min-height:30px}.fees{margin-top:5px!important}
+/* Product Details (Matt 2026-11-14): big price boxes again; link buttons one small row at the bottom */
+.pbox{gap:8px;margin-top:8px}.pbox>div{display:block;padding:7px 10px;border-radius:8px;white-space:normal;overflow:visible}
+.pbox .k{font-size:11px}.pbox .p{font-size:22px;line-height:1.15}.pbox .s{font-size:13px;overflow:visible;text-overflow:clip;white-space:normal}
+.icons{display:flex;gap:4px;margin-top:6px}
+.icons a,.icons button{flex:1;width:auto;height:30px;flex-direction:row;gap:3px;font-size:11px;border-radius:6px}.icons .ic{font-size:12px}
 </style>
 </head>
 <body>
@@ -438,10 +443,11 @@ function render(c, keep) {      // keep: redraw the same card without losing the
     (bi.invoice ? '<span class="stag inv">Invoice recommended</span>' : '') + esc(p.pack) + ' · ' + rating + (c.cached ? ' · saved' : '') + '</div>';
   var product = '<div class="prod">' + (p.image ? '<img src="' + esc(p.image) + '" alt="">' : '') + '<div style="min-width:0"><div class="pt">' + esc(p.title || 'Unknown product') + '</div>' + byl +
     tagl +
-    '<div class="icons">' + icon(wUrl, '🛒', 'Walmart') + icon(aUrl, 'a', 'Amazon') + icon(gUrl, 'G', 'Google') + icon(sUrl, '📈', 'SAS') + icon(mUrl, '👥', 'MSP') + '</div></div></div>' +
+    '</div></div>' +
     '<div id="brandBox"></div>' +
     '<div class="pbox">' + wBox + aBox + '</div>' +
-    '<div class="idl">' + chip('UPC', p.upc) + chip('ASIN', a.asin) + chip('WM', w.wid) + '</div>' + mineBox;
+    '<div class="idl">' + chip('UPC', p.upc) + chip('ASIN', a.asin) + chip('WM', w.wid) + '</div>' + mineBox +
+    '<div class="icons">' + icon(wUrl, '🛒', 'Walmart') + icon(aUrl, 'a', 'Amazon') + icon(gUrl, 'G', 'Google') + icon(sUrl, '📈', 'SAS') + icon(mUrl, '👥', 'MSP') + '</div>';
   var quick = '<div class="tiles" id="tiles"></div><div class="acts"><button class="btn" id="bSkip">Skip</button><button class="btn pri" id="bWill" style="flex:1">★ Will Buy</button>' +
     '<button class="btn" id="bSell">Sell on WMT</button></div><div id="frm"></div>';
   var alerts = '<div class="alerts">' + al.map(function (x) { return '<div><span class="an"><span class="dot ' + x[1][0] + '"></span>' + esc(x[0]) + '</span><span class="st">' + esc(x[1][1]) + '</span></div>'; }).join('') + '</div>';
